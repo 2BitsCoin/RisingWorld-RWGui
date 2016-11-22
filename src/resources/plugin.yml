@@ -1,0 +1,9 @@
+name: com.vms.RWGUI
+main: com.vistamaresoft.rwgui.RWGui
+version: 0.1.0
+author: Maurizio M. Gavioli aka Miwarre
+team: VistaMare Software
+description: "A back-end plug-in providing some GUI ready-made
+controls for other plug-ins to use."
+license: Creative Common by-sa
+website: http://www.vistamaresoft.com
