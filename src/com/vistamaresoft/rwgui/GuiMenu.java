@@ -153,6 +153,35 @@ public class GuiMenu extends GuiPanel implements Listener
 		return numOfItems - 1;
 	}
 
+	public int removeItem(int itemIndex)
+	{
+		if (itemIndex >= items.size())
+			return RWGui.ITEM_NOT_FOUND;
+		items.remove(itemIndex);
+		// TODO: adjust panel width
+		numOfItems--;
+		// if items was right above the max displayable, we no longer need [Prev] and [Next] icons
+		if (numOfItems == MAX_NUM_OF_ITEMS)
+		{
+			panelHeight	-= (RWGui.BUTTON_SIZE + RWGui.BORDER) * 2;
+		}
+		return itemIndex;
+	}
+
+	public int removeItem(String itemText)
+	{
+		for (Pair<String,Object> item : items)
+		{
+			if (item.getL().equals(itemText))
+			{
+				int itemIndex	= items.indexOf(item);
+				if (itemIndex != -1)
+					return removeItem(itemIndex);
+			}
+		}
+		return RWGui.ITEM_NOT_FOUND;
+	}
+
 	public void show(Player player)
 	{
 		if (numOfItems > MAX_NUM_OF_ITEMS)
@@ -167,7 +196,7 @@ public class GuiMenu extends GuiPanel implements Listener
 		}
 
 		setSize(panelWidth, panelHeight, false);	// set appropriate sizes
-		// New we know the panel sizes: update positions of GuiElement's
+		// Now we know the panel sizes: update positions of GuiElement's
 		guiTitleBar.relayout();
 		guiTitleBar.addToPlayer(player);
 		int		yPos	= panelHeight - (GuiTitleBar.TITLEBAR_HEIGHT + RWGui.BORDER);
@@ -190,8 +219,25 @@ public class GuiMenu extends GuiPanel implements Listener
 		}
 		updateTexts();
 		player.addGuiElement(this);
+		setVisible(true);
 		plugin.registerEventListener(this);
 		player.setMouseCursorVisible(true);
+	}
+
+	public void free()
+	{
+		guiTitleBar.free();
+		guiTitleBar		= null;
+		removeChild(buttonNext);
+		buttonNext		= null;
+		removeChild(buttonPrev);
+		buttonPrev		= null;
+		for (int i=0; i < numOfShownItems; i++)
+		{
+			removeChild(guiItems[i]);
+			guiItems[i]	= null;
+		}
+		items.clear();
 	}
 
 	//********************
@@ -209,23 +255,7 @@ public class GuiMenu extends GuiPanel implements Listener
 		for (int j=0; j < numOfShownItems; j++)
 			player.removeGuiElement(guiItems[j]);
 		player.removeGuiElement(this);
-		free();
-	}
-
-	private void free()
-	{
-		guiTitleBar.free();
-		guiTitleBar		= null;
-		removeChild(buttonNext);
-		buttonNext		= null;
-		removeChild(buttonPrev);
-		buttonPrev		= null;
-		for (int i=0; i < numOfShownItems; i++)
-		{
-			removeChild(guiItems[i]);
-			guiItems[i]	= null;
-		}
-		items.clear();
+//		free();
 	}
 
 	private void scrollDown()

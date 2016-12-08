@@ -34,9 +34,9 @@ public class GuiModelessWindow extends GuiPanel
 	// The various labels
 	private static final	int		TEXT_XPOS		= RWGui.BORDER;
 	private static final	int		TEXT_YDELTA		= GuiTitleBar.TITLEBAR_HEIGHT + RWGui.BORDER;
+
 	// FIELDS
 	//
-//	private	Plugin		plugin;
 	private	Player		player;
 	private	GuiLabel[]	labels;
 	private GuiTitleBar	guiTitleBar;
@@ -54,7 +54,6 @@ public class GuiModelessWindow extends GuiPanel
 	public GuiModelessWindow(Plugin plugin, Player player, String titleText, List<String> texts)
 	{
 		super();
-//		this.plugin	= plugin;
 		this.player	= player;
 
 		// create a panel in the lower left corner

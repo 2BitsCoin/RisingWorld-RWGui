@@ -19,7 +19,7 @@ import net.risingworld.api.gui.GuiPanel;
 import net.risingworld.api.gui.PivotPosition;
 import net.risingworld.api.objects.Player;
 
-final class GuiTitleBar extends GuiPanel
+public final class GuiTitleBar extends GuiPanel
 {
 	public static final		int		TITLEBAR_HEIGHT	= RWGui.TITLE_SIZE + RWGui.BORDER*2;
 	private static final	int		CANCEL_YPOS		= TITLEBAR_HEIGHT - RWGui.BORDER;
@@ -27,7 +27,7 @@ final class GuiTitleBar extends GuiPanel
 	private static final	int		TITLE_YPOS		= TITLEBAR_HEIGHT - RWGui.BORDER;
 
 	private	GuiImage	cancelButton;
-	private	GuiElement	parent;
+//	private	GuiElement	parent;
 	private GuiLabel	title;
 
 	public GuiTitleBar(GuiElement parent, String titleText, boolean hasCancelButton)
@@ -35,8 +35,11 @@ final class GuiTitleBar extends GuiPanel
 		super();
 		setColor(RWGui.TITLEBAR_COLOUR);
 		setPivot(PivotPosition.TopLeft);
-		parent.addChild(this);
-		this.parent	= parent;
+		if (parent != null)
+		{
+			parent.addChild(this);
+//			this.parent	= parent;
+		}
 
 		title	= new GuiLabel(titleText, TITLE_XPOS, TITLE_YPOS, false);
 		title.setPivot(PivotPosition.TopLeft);
@@ -54,9 +57,12 @@ final class GuiTitleBar extends GuiPanel
 			cancelButton.setVisible(true);
 			addChild(cancelButton);
 		}
+		// set initial sizes to have give parent something on which to base its own layout
+		setSize(RWGui.getTextWidth(titleText, RWGui.TITLE_SIZE) +
+				(hasCancelButton ? RWGui.BUTTON_SIZE + RWGui.BORDER*3 : RWGui.BORDER), TITLEBAR_HEIGHT, false);
 	}
 
-	protected boolean isCancelButton(GuiElement element)
+	public boolean isCancelButton(GuiElement element)
 	{
 		return (element == cancelButton);
 	}
@@ -78,8 +84,9 @@ final class GuiTitleBar extends GuiPanel
 		removeFromParent();
 	}
 
-	protected void relayout()
+	public void relayout()
 	{
+		GuiElement parent	= getParent();
 		if (parent == null)
 			return;
 		int	parentHeight	= (int)parent.getHeight();
@@ -90,7 +97,7 @@ final class GuiTitleBar extends GuiPanel
 			cancelButton.setPosition(parentWidth - (RWGui.BORDER + RWGui.BUTTON_SIZE), CANCEL_YPOS, false);
 	}
 
-	protected void addToPlayer(Player player)
+	public void addToPlayer(Player player)
 	{
 		player.addGuiElement(this);
 		player.addGuiElement(title);
@@ -98,12 +105,17 @@ final class GuiTitleBar extends GuiPanel
 			player.addGuiElement(cancelButton);
 	}
 
-	protected void removeFromPlayer(Player player)
+	public void removeFromPlayer(Player player)
 	{
 		player.removeGuiElement(this);
 		player.removeGuiElement(title);
 		if (cancelButton != null)
 			player.removeGuiElement(cancelButton);
 	}
-
+/*
+	protected void setParent(GuiElement parent)
+	{
+		this.parent	= parent;
+	}
+*/
 }
