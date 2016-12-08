@@ -18,6 +18,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import net.risingworld.api.Plugin;
+//import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.database.WorldDatabase;
 import net.risingworld.api.events.EventMethod;
 import net.risingworld.api.events.Listener;
@@ -100,7 +101,7 @@ public class RWGui extends Plugin implements Listener
 				"/assets/plus.png", "/assets/minus.png"
 			};
 	protected	static	String				pluginPath;
-	private		static	List<Pair<String,Integer>>	users;		
+	private		static	List<Pair<Integer,Object>>	users;
 /*
 	public RWGui()
 	{
@@ -223,6 +224,12 @@ public class RWGui extends Plugin implements Listener
 		public	void	setR(R r)	{ this.r = r; }
 	}
 
+	public abstract interface RWGuiCallback//<T> extends Callback<T>
+	{
+//		public default void		onCall(T paramT)	{	}
+		public abstract void	onCall(Player player, int id, Object data);
+	}
+
 	//********************
 	// INTERNAL HELPER METHODS
 	//********************
@@ -239,11 +246,11 @@ public class RWGui extends Plugin implements Listener
 		public void	show(Player player);
 	}
 */
-	protected static List<Pair<String,Integer>> getPlayers(Plugin plugin)
+	protected static List<Pair<Integer,Object>> getPlayers(Plugin plugin)
 	{
 		if (users != null)
 			return users;
-		users	= new ArrayList<Pair<String,Integer>>();
+		users	= new ArrayList<Pair<Integer,Object>>();
 		WorldDatabase	db = plugin.getWorldDatabase();
 		try(ResultSet result = db.executeQuery("SELECT `ID`,`Name` FROM `Player` ORDER BY `Name`ASC"))
 		{
@@ -251,7 +258,7 @@ public class RWGui extends Plugin implements Listener
 			{
 				int		id		= result.getInt(1);
 				String	name	= result.getString(2);
-				Pair<String,Integer>	item	= new Pair<String,Integer>(name, id);
+				Pair<Integer,Object>	item	= new Pair<Integer,Object>(id, name);
 				users.add(item);
 			}
 			result.close();

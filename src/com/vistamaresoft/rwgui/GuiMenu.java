@@ -15,8 +15,8 @@ package com.vistamaresoft.rwgui;
 import java.util.ArrayList;
 import java.util.List;
 import com.vistamaresoft.rwgui.RWGui.Pair;
+import com.vistamaresoft.rwgui.RWGui.RWGuiCallback;
 import net.risingworld.api.Plugin;
-import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.events.EventMethod;
 import net.risingworld.api.events.Listener;
 import net.risingworld.api.events.player.gui.PlayerGuiElementClickEvent;
@@ -40,20 +40,20 @@ public class GuiMenu extends GuiPanel implements Listener
 	private GuiImage		buttonPrev;
 	private	int				firstItem;		// the index of the first shown menu item in the list of
 											// all the items;
-	private	Callback<Object>	callback;
+	private	RWGuiCallback	callback;
 	private	int				numOfItems;
 	private	int				numOfShownItems;
 	private int				panelHeight;
 	private int				panelWidth;
 	private	Plugin			plugin;
-	private List<Pair<String,Object>>	items;
+	private List<Pair<String,Pair<Integer,Object>>>	items;
 	private GuiTitleBar		guiTitleBar;
 
-	public GuiMenu(Plugin plugin, String titleText, Callback<Object> callback)
+	public GuiMenu(Plugin plugin, String titleText, RWGuiCallback callback)
 	{
 		super();
 		guiItems		= new GuiLabel[MAX_NUM_OF_ITEMS];
-		items			= new ArrayList<Pair<String,Object>>();
+		items			= new ArrayList<Pair<String,Pair<Integer,Object>>>();
 		this.callback	= callback;
 		this.plugin		= plugin;
 		firstItem		= 0;
@@ -96,7 +96,7 @@ public class GuiMenu extends GuiPanel implements Listener
 		if (guiTitleBar.isCancelButton(element))
 		{
 			close(player);
-			callback.onCall(new Integer(RWGui.ABORT_ID));
+			callback.onCall(player, new Integer(RWGui.ABORT_ID), null);
 			return;
 		}
 		if (element == buttonPrev)
@@ -114,7 +114,23 @@ public class GuiMenu extends GuiPanel implements Listener
 			if (event.getGuiElement() == guiItems[i])
 			{
 				close(player);
-				callback.onCall(items.get(i).getR());
+				// To support GuiUsersMenu: if the data associated with a menu
+				// item can be split in a Pair left and right parts, pass them
+				// as separate parameters to callback.onCall(); if not, pass the
+				// entire data as second parameter.
+				Pair<Integer,Object>	data	= items.get(i).getR();
+//				Object	id, addData;
+//				if (data instanceof Pair)
+//				{
+//					id		= ((Pair<?, ?>)data).getR();
+//					addData	= ((Pair<?, ?>)data).getL();
+//				}
+//				else
+//				{
+//					id		= data;
+//					addData	= null;
+//				}
+				callback.onCall(player, data.getL(), data.getR());
 				return;
 			}
 		}
@@ -124,9 +140,10 @@ public class GuiMenu extends GuiPanel implements Listener
 	// PUBLIC METHODS
 	//********************
 
-	public int addItem(String text, Object data)
+	public int addItem(String text, Integer id, Object data)
 	{
-		Pair<String,Object>	item	= new Pair<String,Object>(text, data);
+		Pair<String,Pair<Integer,Object>>	item	=
+				new Pair<String,Pair<Integer,Object>>(text, new Pair<Integer,Object>(id,data));
 		items.add(item);
 		// adjust panel width
 		int		textWidth;
@@ -170,7 +187,7 @@ public class GuiMenu extends GuiPanel implements Listener
 
 	public int removeItem(String itemText)
 	{
-		for (Pair<String,Object> item : items)
+		for (Pair<String,Pair<Integer,Object>> item : items)
 		{
 			if (item.getL().equals(itemText))
 			{

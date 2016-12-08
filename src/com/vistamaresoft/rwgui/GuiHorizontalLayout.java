@@ -60,7 +60,7 @@ public class GuiHorizontalLayout extends GuiLayout
 		// if top down, re-layout all children before laying out this
 //		if (!bottomUp)
 		// scan children once to retrieve the max height and total width
-			for (Pair<GuiElement,Object> item : children)
+			for (Pair<GuiElement,Pair<Integer,Object>> item : children)
 			{
 				GuiElement	element			= item.getL();
 				if (item.getL() instanceof GuiLayout)
@@ -84,7 +84,7 @@ public class GuiHorizontalLayout extends GuiLayout
 			else if ( (flags & RWGui.LAYOUT_H_SPREAD) != 0)
 				border	= (minWidth - width) / (children.size() - 1);
 		}
-		for (Pair<GuiElement,Object> item : children)
+		for (Pair<GuiElement,Pair<Integer,Object>> item : children)
 		{
 			// position the new element on the left of previous children
 			Vector2i	elementSizes	= RWGui.getElementSizes(item.getL());

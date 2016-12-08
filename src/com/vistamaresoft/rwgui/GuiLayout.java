@@ -29,7 +29,8 @@ import net.risingworld.api.objects.Player;
 */
 public class GuiLayout extends GuiPanel //implements GuiLayoutElement
 {
-	protected	ArrayList<Pair<GuiElement,Object>>	children	= null;
+	protected	ArrayList<Pair<GuiElement,Pair<Integer,Object>>>
+													children	= null;
 	protected	int									flags		= RWGui.LAYOUT_V_TOP & RWGui.LAYOUT_H_LEFT;
 	protected	int									shown		= 0;
 
@@ -45,7 +46,7 @@ public class GuiLayout extends GuiPanel //implements GuiLayoutElement
 //	@Override
 	public void close(Player player)
 	{
-		for (Pair<GuiElement,Object> item : children)
+		for (Pair<GuiElement,Pair<Integer,Object>> item : children)
 		{
 			if (item.getL() instanceof GuiLayout)
 				((GuiLayout)item.getL()).close(player);
@@ -64,7 +65,7 @@ public class GuiLayout extends GuiPanel //implements GuiLayoutElement
 //	@Override
 	public void free()
 	{
-		for (Pair<GuiElement,Object> item : children)
+		for (Pair<GuiElement,Pair<Integer,Object>> item : children)
 		{
 			GuiElement	element	= item.getL();
 			if (element instanceof GuiLayout)
@@ -77,7 +78,7 @@ public class GuiLayout extends GuiPanel //implements GuiLayoutElement
 //	@Override
 	public void hide(Player player)
 	{
-		for (Pair<GuiElement,Object> item : children)
+		for (Pair<GuiElement,Pair<Integer,Object>> item : children)
 		{
 			GuiElement	element	= item.getL();
 			if (element instanceof GuiLayout)
@@ -93,7 +94,7 @@ public class GuiLayout extends GuiPanel //implements GuiLayoutElement
 	public void show(Player player)
 	{
 		player.addGuiElement(this);
-		for (Pair<GuiElement,Object> item : children)
+		for (Pair<GuiElement,Pair<Integer,Object>> item : children)
 		{
 			GuiElement	element	= item.getL();
 			if (element instanceof GuiLayout)
@@ -107,16 +108,21 @@ public class GuiLayout extends GuiPanel //implements GuiLayoutElement
 	@Override
 	public void addChild(GuiElement element)
 	{
-		addChild(element, null);
+		addChild(element, null, null);
 	}
 
-	public void addChild(GuiElement element, Object data)
+	public void addChild(GuiElement element, Integer id)
+	{
+		addChild(element, id, null);
+	}
+
+	public void addChild(GuiElement element, Integer id, Object data)
 	{
 		if (element == null)
 			return;
 		if (children == null)
-			children	= new ArrayList<Pair<GuiElement,Object>>(4);
-		children.add(new Pair<GuiElement,Object>(element, data));
+			children	= new ArrayList<Pair<GuiElement,Pair<Integer,Object>>>(4);
+		children.add(new Pair<GuiElement,Pair<Integer,Object>>(element, new Pair<Integer,Object>(id, data)));
 		if (element instanceof GuiImage)
 			((GuiImage)element).setClickable(data != null);
 		else if (element instanceof GuiLabel)
@@ -145,7 +151,7 @@ public class GuiLayout extends GuiPanel //implements GuiLayoutElement
 	{
 		if (children == null || element == null)
 			return;
-		for (Pair<GuiElement,Object> item : children)
+		for (Pair<GuiElement,Pair<Integer,Object>> item : children)
 			if (item.getL() == element)
 			{
 				children.remove(item);
@@ -161,23 +167,23 @@ public class GuiLayout extends GuiPanel //implements GuiLayoutElement
 			layout		= new GuiHorizontalLayout(layoutFlags);
 		else
 			layout		= new GuiVerticalLayout(layoutFlags);
-		addChild(layout, null);
+		addChild(layout, null, null);
 		return layout;
 	}
 
-	public Object getItemData(GuiElement element)
+	public Integer getItemId(GuiElement element)
 	{
-		for (Pair<GuiElement,Object> item : children)
+		for (Pair<GuiElement,Pair<Integer, Object>> item : children)
 		{
 			GuiElement	e	= item.getL();
 			if (e instanceof GuiLayout)
 			{
-				Object obj	= ((GuiLayout)e).getItemData(element);
-				if (obj != null)
-					return obj;
+				Integer	id	= ((GuiLayout)e).getItemId(element);
+				if (id != null)
+					return id;
 			}
 			if (item.getL() == element)
-				return item.getR();
+				return item.getR().getL();
 		}
 		return null;
 	}

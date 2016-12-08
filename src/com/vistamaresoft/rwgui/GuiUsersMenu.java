@@ -14,22 +14,22 @@ package com.vistamaresoft.rwgui;
 
 import java.util.List;
 import com.vistamaresoft.rwgui.RWGui.Pair;
+import com.vistamaresoft.rwgui.RWGui.RWGuiCallback;
 import net.risingworld.api.Plugin;
-import net.risingworld.api.callbacks.Callback;
 
 public class GuiUsersMenu extends GuiMenu
 {
 
-	public GuiUsersMenu(Plugin plugin, String titleText, Callback<Object> callback, int excludeId)
+	public GuiUsersMenu(Plugin plugin, String titleText, RWGuiCallback callback, int excludeId)
 	{
 		super(plugin, titleText, callback);
 
-		List<Pair<String,Integer>>	users	= RWGui.getPlayers(plugin);
+		List<Pair<Integer,Object>>	users	= RWGui.getPlayers(plugin);
 		if (users != null)
 		{
-			for (Pair<String,Integer> entry : users)
-				if (entry.getR() != excludeId)
-					addItem(entry.getL(), entry);
+			for (Pair<Integer,Object> entry : users)
+				if (entry.getL() != excludeId)
+					addItem((String)entry.getR(), entry.getL(), entry.getR());
 		}
 	}
 	

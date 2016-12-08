@@ -12,8 +12,9 @@
 
 package com.vistamaresoft.rwgui;
 
+import com.vistamaresoft.rwgui.RWGui.RWGuiCallback;
 import net.risingworld.api.Plugin;
-import net.risingworld.api.callbacks.Callback;
+//import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.events.EventMethod;
 import net.risingworld.api.events.Listener;
 import net.risingworld.api.events.player.gui.PlayerGuiElementClickEvent;
@@ -25,13 +26,13 @@ import net.risingworld.api.objects.Player;
 
 public class GuiDialogueBox extends GuiPanel implements Listener
 {
-	private	Callback<Object>	callback;
+	private	RWGuiCallback	callback;
 	protected	GuiLayout	layout;
 	protected	int			listenerRef;
 	protected	Plugin		plugin;
 	protected	GuiTitleBar	titleBar;
 
-	public GuiDialogueBox(Plugin plugin, String title, int layoutType, Callback<Object> callback)
+	public GuiDialogueBox(Plugin plugin, String title, int layoutType, RWGuiCallback callback)
 	{
 		setPosition(0.5f, 0.5f, true);
 		setPivot(PivotPosition.Center);
@@ -67,14 +68,14 @@ public class GuiDialogueBox extends GuiPanel implements Listener
 		if (titleBar.isCancelButton(element))
 		{
 			close(player);
-			callback.onCall(new Integer(RWGui.ABORT_ID));
+			callback.onCall(player, RWGui.ABORT_ID, null);
 			return;
 		}
-		Object	data;
-		if ( (data=layout.getItemData(element)) != null)
+		Integer	id;
+		if ( (id=layout.getItemId(element)) != null)
 		{
 //			close(player);
-			callback.onCall(data);
+			callback.onCall(player, id, null);
 			return;
 		}
 	}
@@ -82,22 +83,18 @@ public class GuiDialogueBox extends GuiPanel implements Listener
 	@EventMethod
 	public void onTextEntry(PlayerGuiInputEvent event)
 	{
-		Object	data;
-		if ( (data=layout.getItemData(event.getGuiElement())) != null)
+		Integer	id;
+		if ( (id=layout.getItemId(event.getGuiElement())) != null)
 		{
-			callback.onCall(data);
+			callback.onCall(event.getPlayer(), id, event.getInput());
 		}
-//		Player		player	= event.getPlayer();
-//		GuiTransfer	gui		= (GuiTransfer)player.getAttribute(key_gui);
-//		if (gui != null)
-//			gui.textEntry(event.getGuiElement(), event.getInput(), player);
 	}
 
 	//********************
 	// PUBLIC METHODS
 	//********************
 
-	public void setCallback(Callback<Object> callback)
+	public void setCallback(RWGuiCallback callback)
 	{
 		this.callback	= callback;
 	}
@@ -151,9 +148,9 @@ public class GuiDialogueBox extends GuiPanel implements Listener
 	 * @param	data	the data associated with the element; may be null for
 	 * 					inactive elements.
 	 */
-	public void addChild(GuiElement element, Object data)
+	public void addChild(GuiElement element, Integer id, Object data)
 	{
-		layout.addChild(element, data);
+		layout.addChild(element, id, data);
 	}
 
 	/**
@@ -223,15 +220,15 @@ public class GuiDialogueBox extends GuiPanel implements Listener
 	}
 
 	/**
-	 * Returns the data associated with element, if element is one of the
-	 * children of the dialogue box; or null otherwise.
+	 * Returns the id associated with element, if element is one of the
+	 * children of the dialogue box (recursively); or null otherwise.
 
 	 * @param	element	the GuiElement to look for.
-	 * @return	the data associated with element if present, null if not.
+	 * @return	the id associated with element if present, null if not.
 	 */
-	public Object getItemData(GuiElement element)
+	public Integer getItemData(GuiElement element)
 	{
-		return layout.getItemData(element);
+		return layout.getItemId(element);
 	}
 
 	/**
