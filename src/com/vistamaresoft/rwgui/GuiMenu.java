@@ -27,9 +27,46 @@ import net.risingworld.api.gui.GuiPanel;
 import net.risingworld.api.gui.PivotPosition;
 import net.risingworld.api.objects.Player;
 
+/**
+ * A class implementing a modal menu. Each menu is made of a top title bar,
+ * with title and close button, and a number of text items which can be clicked
+ * to select.
+ *
+ * The items are arranged vertically and the menu is shown in the middle of the
+ * player screen. The menu adapts its vertical and horizontal sizes to the
+ * number and length of the texts.
+ * <p>If there are more than 12 items, the menu displays them in chunks of 12,
+ * with an up and a down button to page among the chunks.
+ * <p>The menu manages its own event Listener; it also turns the mouse
+ * cursor on on display and off on hiding.
+ * <p>The menu manages the close button in the title bar, hiding the box
+ * from the player screen and turning off the mouse cursor. The callback object
+ * is notified of a close event by passing an id parameter with a value of
+ * RWGui.ABORT_ID.
+ * <p>The menu notifies of click and text entry events via an RWGuiCallback
+ * object passed to the constructor or set after construction with
+ * the setCallback() method.
+ * <p>On click events, the onCall() method of the callback object is called
+ * with parameters for the player originating the event, the id of the menu
+ * item and any additional data set for the GuiElement. Id and data for each
+ * item are set when the item is added.
+ * <p>On click events, the menu automatically closes and turns the mouse cursor
+ * off. The consumer plug-in needs not to do any additional management of the
+ * menu in response to notifications.
+ * <p>Once closed, the menu still exists and can be reused again, if necessary.
+ * Once the menu is no longer needed, its resources can be freed with the
+ * free() method.
+ * <p><b>Important</b>: due to the way Rising World plug-ins are loaded,
+ * <b>this class cannot instantiated or used in any way</b> from within the onEnable()
+ * method of a plug-in, as it is impossible to be sure that, at that moment,
+ * the RWGui plug-in has already been loaded.
+ * <p>The first moment one can be sure that all plug-ins have been loaded, and
+ * it is safe to use this class, is when (or after) the first player connects
+ * to the server (either dedicated or local).
+ */
 public class GuiMenu extends GuiPanel implements Listener
 {
-	private static final	int		MAX_NUM_OF_ITEMS= 6;
+	private static final	int		MAX_NUM_OF_ITEMS= 12;
 	private static final	float	PANEL_XPOS		= 0.5f;
 	private static final	float	PANEL_YPOS		= 0.5f;
 
@@ -49,6 +86,17 @@ public class GuiMenu extends GuiPanel implements Listener
 	private List<Pair<String,Pair<Integer,Object>>>	items;
 	private GuiTitleBar		guiTitleBar;
 
+	/**
+	 * Creates a new GuiMenu.
+	 * @param	plugin		the plug-in the GuiMenu is intended for. This
+	 * 						is only needed to manage the internal event listener
+	 * 						and has no effects on the plug-in itself.
+	 * @param	titleText	the text of the title.
+	 * @param	callback	the callback object to which to report events. Can
+	 * 						be null, but in this case no event will reported
+	 * 						until an actual callback object is set with the
+	 * 						setCallback() method.
+	 */
 	public GuiMenu(Plugin plugin, String titleText, RWGuiCallback callback)
 	{
 		super();
@@ -60,10 +108,10 @@ public class GuiMenu extends GuiPanel implements Listener
 		numOfItems		= 0;
 		// Initial panel height to contain title, prev. and next buttons
 		// Borders: top, twice title/items, bottom
-		panelHeight		= RWGui.TITLE_SIZE + /*RWGui.BUTTON_SIZE*2 + RWGui.BORDER*4*/ + RWGui.BORDER*4;
+		panelHeight		= RWGui.TITLE_SIZE + RWGui.DEFAULT_PADDING*4;
 		// Initial panel width to contain title and [X] button in top right corner
 		panelWidth		= (int)(RWGui.AVG_CHAR_WIDTH1 * titleText.length() * RWGui.TITLE_SIZE)
-				+ RWGui.BUTTON_SIZE + RWGui.BORDER*3;
+				+ RWGui.BUTTON_SIZE + RWGui.DEFAULT_PADDING*3;
 		// position a panel centred in the screen
 		setPosition(PANEL_XPOS, PANEL_YPOS, true);
 //		setSize(panelWidth, panelHeight, false);	// not yet known!!!
@@ -96,7 +144,8 @@ public class GuiMenu extends GuiPanel implements Listener
 		if (guiTitleBar.isCancelButton(element))
 		{
 			close(player);
-			callback.onCall(player, new Integer(RWGui.ABORT_ID), null);
+			if (callback != null)
+				callback.onCall(player, RWGui.ABORT_ID, null);
 			return;
 		}
 		if (element == buttonPrev)
@@ -114,23 +163,9 @@ public class GuiMenu extends GuiPanel implements Listener
 			if (event.getGuiElement() == guiItems[i])
 			{
 				close(player);
-				// To support GuiUsersMenu: if the data associated with a menu
-				// item can be split in a Pair left and right parts, pass them
-				// as separate parameters to callback.onCall(); if not, pass the
-				// entire data as second parameter.
 				Pair<Integer,Object>	data	= items.get(i).getR();
-//				Object	id, addData;
-//				if (data instanceof Pair)
-//				{
-//					id		= ((Pair<?, ?>)data).getR();
-//					addData	= ((Pair<?, ?>)data).getL();
-//				}
-//				else
-//				{
-//					id		= data;
-//					addData	= null;
-//				}
-				callback.onCall(player, data.getL(), data.getR());
+				if (callback != null)
+					callback.onCall(player, data.getL(), data.getR());
 				return;
 			}
 		}
@@ -140,54 +175,101 @@ public class GuiMenu extends GuiPanel implements Listener
 	// PUBLIC METHODS
 	//********************
 
+	/**
+	 * Sets the callback function called upon click and text entry events.
+
+	 * @param	callback	the new callback
+	 */
+	public void setCallback(RWGuiCallback callback)
+	{
+		this.callback	= callback;
+	}
+
+	/**
+	 * Adds a new menu item with the associated id and data.
+	 * 
+	 * <p>id can be any Integer and id's should be all different from one
+	 * another within each dialogue box.
+	 * 
+	 * <p>The data parameter can be any Java object and can store additional
+	 * information required to deal with the element, when a click event is
+	 * reported for it via the callback object. It can also be null if no
+	 * additional info is needed for the element.
+	 * 
+	 * <p>id and data are reported by the callback object upon click events.
+	 * 
+	 * @param	text	the text of the new menu item.
+	 * @param	id		the id associated with the item.
+	 * @param	data	the data associated with the element; may be null for
+	 * 					elements which need no additional data other than their id.
+	 */
 	public int addItem(String text, Integer id, Object data)
 	{
 		Pair<String,Pair<Integer,Object>>	item	=
 				new Pair<String,Pair<Integer,Object>>(text, new Pair<Integer,Object>(id,data));
 		items.add(item);
 		// adjust panel width
-		int		textWidth;
-		if ( (textWidth = (int)(RWGui.AVG_CHAR_WIDTH1 * text.length() * RWGui.ITEM_SIZE)+RWGui.BORDER*2) > panelWidth)
+		int		textWidth	= (int)(RWGui.AVG_CHAR_WIDTH1 * text.length() * RWGui.ITEM_SIZE) +
+				RWGui.DEFAULT_PADDING*2;
+		if (textWidth > panelWidth)
 			panelWidth = textWidth;
 		// if items exceed the max, we'll need to display [Prev] and [Next] icons
 		if (numOfItems == MAX_NUM_OF_ITEMS)
 		{
-			panelHeight	+= (RWGui.BUTTON_SIZE + RWGui.BORDER) * 2;
+			panelHeight	+= (RWGui.BUTTON_SIZE + RWGui.DEFAULT_PADDING) * 2;
 		}
 		// if not, create a new GuiLabel for the item
 		else if (numOfItems < MAX_NUM_OF_ITEMS)
 		{
 			guiItems[numOfItems]	= new GuiLabel(0, 0, false);	// temporary position
 			guiItems[numOfItems].setPivot(PivotPosition.TopLeft);
-//			buttons[numOfItems].setColor(BUTTON_COLOUR);
 			guiItems[numOfItems].setFontSize(RWGui.ITEM_SIZE);
 			guiItems[numOfItems].setClickable(true);
 			addChild(guiItems[numOfItems]);
-			panelHeight	+= RWGui.ITEM_SIZE + RWGui.BORDER;					// adjust panel and height
+			panelHeight	+= RWGui.ITEM_SIZE + RWGui.DEFAULT_PADDING;					// adjust panel and height
 		}
 		// if items > MAX_NUM_OF_ITEMS, do nothing special
 		numOfItems++;
 		return numOfItems - 1;
 	}
 
+	/**
+	 * Removes the menu item at the itemIndex index. Item indices start from 0.
+	 * 
+	 * @param	itemIndex	the index of the menu item to remove.
+	 * @return	the index of the removed item or ERR_INVALID_PARAMETER if the
+	 * 			index was not valid.
+	 */
 	public int removeItem(int itemIndex)
 	{
-		if (itemIndex >= items.size())
-			return RWGui.ITEM_NOT_FOUND;
+		if (itemIndex < 0 || itemIndex >= items.size())
+			return RWGui.ERR_INVALID_PARAMETER;
 		items.remove(itemIndex);
 		// TODO: adjust panel width
 		numOfItems--;
 		// if items was right above the max displayable, we no longer need [Prev] and [Next] icons
 		if (numOfItems == MAX_NUM_OF_ITEMS)
 		{
-			panelHeight	-= (RWGui.BUTTON_SIZE + RWGui.BORDER) * 2;
+			panelHeight	-= (RWGui.BUTTON_SIZE + RWGui.DEFAULT_PADDING) * 2;
 		}
 		return itemIndex;
 	}
 
+	/**
+	 * Removes the first menu item with given item text.
+	 * 
+	 * To match, the item text should be <b>exactly</b> the same,
+	 * capitalisation included.
+	 * 
+	 * <p>If more items with the same text exist, only the first is removed.
+	 * 
+	 * @param	itemText	the text of the menu item to remove.
+	 * @return	the index of the removed item or ERR_ITEM_NOT_FOUND if the
+	 * 			the no item has that string as item text.
+	 */
 	public int removeItem(String itemText)
 	{
-		for (Pair<String,Pair<Integer,Object>> item : items)
+		for (Pair<String,?> item : items)
 		{
 			if (item.getL().equals(itemText))
 			{
@@ -196,9 +278,14 @@ public class GuiMenu extends GuiPanel implements Listener
 					return removeItem(itemIndex);
 			}
 		}
-		return RWGui.ITEM_NOT_FOUND;
+		return RWGui.ERR_ITEM_NOT_FOUND;
 	}
 
+	/**
+	 * Displays the menu on the player screen.
+	 * 
+	 * @param	player	the player to show the dialogue box to.
+	 */
 	public void show(Player player)
 	{
 		if (numOfItems > MAX_NUM_OF_ITEMS)
@@ -216,22 +303,22 @@ public class GuiMenu extends GuiPanel implements Listener
 		// Now we know the panel sizes: update positions of GuiElement's
 		guiTitleBar.relayout();
 		guiTitleBar.addToPlayer(player);
-		int		yPos	= panelHeight - (GuiTitleBar.TITLEBAR_HEIGHT + RWGui.BORDER);
+		int		yPos	= panelHeight - (GuiTitleBar.TITLEBAR_HEIGHT + RWGui.DEFAULT_PADDING);
 		if (numOfItems > MAX_NUM_OF_ITEMS)
 		{
-			buttonPrev.setPosition(RWGui.BORDER, yPos, false);
+			buttonPrev.setPosition(RWGui.DEFAULT_PADDING, yPos, false);
 			player.addGuiElement(buttonPrev);
-			yPos	-= RWGui.BORDER + RWGui.BUTTON_SIZE;
+			yPos	-= RWGui.DEFAULT_PADDING + RWGui.BUTTON_SIZE;
 		}
 		for (int i = 0; i < numOfShownItems; i++)
 		{
-			guiItems[i].setPosition(RWGui.BORDER, yPos, false);
+			guiItems[i].setPosition(RWGui.DEFAULT_PADDING, yPos, false);
 			player.addGuiElement(guiItems[i]);
-			yPos		-= RWGui.BORDER + RWGui.ITEM_SIZE;
+			yPos		-= RWGui.DEFAULT_PADDING + RWGui.ITEM_SIZE;
 		}
 		if (numOfItems > MAX_NUM_OF_ITEMS)
 		{
-			buttonNext.setPosition(RWGui.BORDER, yPos, false);
+			buttonNext.setPosition(RWGui.DEFAULT_PADDING, yPos, false);
 			player.addGuiElement(buttonNext);
 		}
 		updateTexts();
@@ -241,6 +328,15 @@ public class GuiMenu extends GuiPanel implements Listener
 		player.setMouseCursorVisible(true);
 	}
 
+	/**
+	 * Releases the resources used by the menu. After this method has
+	 * been called, the menu cannot be used or displayed any longer.
+	 * 
+	 * The resources are in any case garbage collected once the dialogue box
+	 * goes out of scope or all the references to it elapse. Using this method
+	 * might be useful to speed up the garbage collection process, once the
+	 * dialogue box is not longer needed.
+	 */
 	public void free()
 	{
 		guiTitleBar.free();
@@ -272,7 +368,6 @@ public class GuiMenu extends GuiPanel implements Listener
 		for (int j=0; j < numOfShownItems; j++)
 			player.removeGuiElement(guiItems[j]);
 		player.removeGuiElement(this);
-//		free();
 	}
 
 	private void scrollDown()

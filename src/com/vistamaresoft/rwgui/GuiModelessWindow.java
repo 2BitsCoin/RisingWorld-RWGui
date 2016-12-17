@@ -19,6 +19,22 @@ import net.risingworld.api.gui.GuiPanel;
 import net.risingworld.api.gui.PivotPosition;
 import net.risingworld.api.objects.Player;
 
+/**
+ * A class implementing a mode-less window, made of a title bar and a number
+ * of textual strings displayed one below the other.
+ *
+ * The window is placed near the lower left corner and its height and width
+ * depends on the number and length of the textual strings.
+ * <p>The window has no behaviour, i.e. it just displays the texts and does
+ * nothing else; in particular, the player cannot interact with it in any way.
+ * <p><b>Important</b>: due to the way Rising World plug-ins are loaded,
+ * <b>this class cannot instantiated or used in any way</b> from within the onEnable()
+ * method of a plug-in, as it is impossible to be sure that, at that moment,
+ * the RWGui plug-in has already been loaded.
+ * <p>The first moment one can be sure that all plug-ins have been loaded, and
+ * it is safe to use this class, is when (or after) the first player connects
+ * to the server (either dedicated or local).
+ */
 public class GuiModelessWindow extends GuiPanel
 {
 	// CONSTANTS
@@ -32,8 +48,8 @@ public class GuiModelessWindow extends GuiPanel
 	private static final	int		TEXT_COLOUR		= 0x000000FF;
 
 	// The various labels
-	private static final	int		TEXT_XPOS		= RWGui.BORDER;
-	private static final	int		TEXT_YDELTA		= GuiTitleBar.TITLEBAR_HEIGHT + RWGui.BORDER;
+	private static final	int		TEXT_XPOS		= RWGui.DEFAULT_PADDING;
+	private static final	int		TEXT_YDELTA		= GuiTitleBar.TITLEBAR_HEIGHT + RWGui.DEFAULT_PADDING;
 
 	// FIELDS
 	//
@@ -71,7 +87,8 @@ public class GuiModelessWindow extends GuiPanel
 	}
 
 	/**
-	 * Set new texts into the window. Window position and height are adjusted
+	 * Set new texts into the window. Window position, height and width are
+	 * adjusted to the new number and length of the textual strings.
 	 * 
 	 * @param texts
 	 */
@@ -79,14 +96,16 @@ public class GuiModelessWindow extends GuiPanel
 	{
 		int		numOfTexts	= texts.size();
 		// compute height from number of text lines
-		int		panelHeight	= RWGui.TITLE_SIZE + RWGui.ITEM_SIZE*texts.size() + RWGui.BORDER*(texts.size()+3);
+		int		panelHeight	= RWGui.TITLE_SIZE + RWGui.ITEM_SIZE*texts.size() +
+				RWGui.DEFAULT_PADDING*(texts.size()+3);
 		// compute width from number of chars in title and in text lines
-		int		panelWidth	= (int)(RWGui.AVG_CHAR_WIDTH1 * guiTitleBar.getTitleText().length() * RWGui.TITLE_SIZE);
+		int		panelWidth	= (int)(RWGui.AVG_CHAR_WIDTH1 * guiTitleBar.getTitleText().length() *
+				RWGui.TITLE_SIZE);
 		int		textWidth;
 		for (int i = 0; i < numOfTexts; i++)
 			if ( (textWidth = (int)(RWGui.AVG_CHAR_WIDTH1 * texts.get(i).length() * RWGui.ITEM_SIZE)) > panelWidth)
 				panelWidth = textWidth;
-		panelWidth	+= 2 * RWGui.BORDER;
+		panelWidth	+= 2 * RWGui.DEFAULT_PADDING;
 		// Panel size are known: compute position of each item
 		setPosition(PANEL_XPOS, PANEL_YPOS+panelHeight, false);
 		setSize(panelWidth, panelHeight, false);
@@ -104,12 +123,14 @@ public class GuiModelessWindow extends GuiPanel
 			labels[i].setClickable(false);
 			addChild(labels[i]);
 			player.addGuiElement(labels[i]);
-			yPos		-= RWGui.BORDER + RWGui.ITEM_SIZE;
+			yPos		-= RWGui.DEFAULT_PADDING + RWGui.ITEM_SIZE;
 		}
 	}
 
 	/**
-	 * Closes the window and destroys allocated resources. To be used before relinquishing the object
+	 * Closes the window and destroys allocated resources. To be used before
+	 * relinquishing the object. After calling this method, the window cannot
+	 * be used any longer.
 	 */
 	public void free()
 	{

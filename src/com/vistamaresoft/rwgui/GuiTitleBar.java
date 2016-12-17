@@ -19,27 +19,49 @@ import net.risingworld.api.gui.GuiPanel;
 import net.risingworld.api.gui.PivotPosition;
 import net.risingworld.api.objects.Player;
 
+/**
+ * Implements the concept of a title bar common to many other classes of this
+ * package.
+ * <p>A title bar is made of a title text and of an optional close button.
+ * <p><b>Important</b>: due to the way Rising World plug-ins are loaded,
+ * <b>this class cannot instantiated or used in any way</b> from within the onEnable()
+ * method of a plug-in, as it is impossible to be sure that, at that moment,
+ * the RWGui plug-in has already been loaded.
+ * <p>The first moment one can be sure that all plug-ins have been loaded, and
+ * it is safe to use this class, is when (or after) the first player connects
+ * to the server (either dedicated or local).
+ */
 public final class GuiTitleBar extends GuiPanel
 {
-	public static final		int		TITLEBAR_HEIGHT	= RWGui.TITLE_SIZE + RWGui.BORDER*2;
-	private static final	int		CANCEL_YPOS		= TITLEBAR_HEIGHT - RWGui.BORDER;
-	private static final	int		TITLE_XPOS		= RWGui.BORDER;
-	private static final	int		TITLE_YPOS		= TITLEBAR_HEIGHT - RWGui.BORDER;
+	public static final		int		TITLEBAR_HEIGHT	= RWGui.TITLE_SIZE + RWGui.DEFAULT_PADDING*2;
+	private static final	int		CANCEL_YPOS		= TITLEBAR_HEIGHT - RWGui.DEFAULT_PADDING;
+	private static final	int		TITLE_XPOS		= RWGui.DEFAULT_PADDING;
+	private static final	int		TITLE_YPOS		= TITLEBAR_HEIGHT - RWGui.DEFAULT_PADDING;
 
 	private	GuiImage	cancelButton;
-//	private	GuiElement	parent;
+	private	int			minWidth;
 	private GuiLabel	title;
 
+	/**
+	 * Creates a new title bar as a child of an existing GuiElement (typically
+	 * a GuiPanel).
+	 * <p>The bar is added to the given parent, is given a specific background
+	 * colour and pivot position (TopLeft); its title text is given a specific
+	 * font colour and size.
+	 * <p>If the close button is required, the image element for it is also
+	 * created.
+	 * @param	parent			the GuiElement to which to add the title bar
+	 * @param	titleText		the text of the title
+	 * @param	hasCancelButton	whether the title bar should have a cancel
+	 *							button or not.
+	 */
 	public GuiTitleBar(GuiElement parent, String titleText, boolean hasCancelButton)
 	{
 		super();
 		setColor(RWGui.TITLEBAR_COLOUR);
 		setPivot(PivotPosition.TopLeft);
 		if (parent != null)
-		{
 			parent.addChild(this);
-//			this.parent	= parent;
-		}
 
 		title	= new GuiLabel(titleText, TITLE_XPOS, TITLE_YPOS, false);
 		title.setPivot(PivotPosition.TopLeft);
@@ -57,21 +79,39 @@ public final class GuiTitleBar extends GuiPanel
 			cancelButton.setVisible(true);
 			addChild(cancelButton);
 		}
+		// compute minimal width
+		minWidth	= (int)(RWGui.getTextWidth(titleText, RWGui.TITLE_SIZE) +
+				(hasCancelButton ? RWGui.BUTTON_SIZE + RWGui.DEFAULT_PADDING*3 : RWGui.DEFAULT_PADDING));
 		// set initial sizes to have give parent something on which to base its own layout
-		setSize(RWGui.getTextWidth(titleText, RWGui.TITLE_SIZE) +
-				(hasCancelButton ? RWGui.BUTTON_SIZE + RWGui.BORDER*3 : RWGui.BORDER), TITLEBAR_HEIGHT, false);
+		setSize(minWidth, TITLEBAR_HEIGHT, false);
 	}
 
+	/**
+	 * Checks if the given element is the cancel button or not.
+	 * 
+	 * @param	element	the GuiElement to check.
+	 * @return	true if the passed GuiElement is the title bar cancel button,
+	 *			false if it is not.
+	 */
 	public boolean isCancelButton(GuiElement element)
 	{
 		return (element == cancelButton);
 	}
 
+	/**
+	 * Returns the current title text.
+	 * @return	the current title text as a String.
+	 */
 	protected String getTitleText()
 	{
 		return title.getText();
 	}
 
+	/**
+	 * Releases all the resources used by the title bar. To be used before
+	 * disposing of the title bar itself.
+	 * <p>After calling this method, the title bar cannot be used any longer.
+	 */
 	protected void free()
 	{
 		removeChild(title);
@@ -84,6 +124,21 @@ public final class GuiTitleBar extends GuiPanel
 		removeFromParent();
 	}
 
+	/**
+	 * Returns a minimal width (in pixels) suitable to contain the whole title bar.
+	 * @return	 a minimal width in pixels.
+	 */
+	public int getMinWidth()	{ return minWidth; }
+
+	/**
+	 * Updates the width and the position of the title bar to match the current
+	 * width and height of the parent GuiElement.
+	 * <p>To be used <b>after</b> the parent GuiElement has reached its
+	 * definitive width and height, typically right before displaying the
+	 * parent to a player.
+	 * <p>The title bar is placed at the top of the parent and inset a few
+	 * pixels from the parent left, top and right border. 
+	 */
 	public void relayout()
 	{
 		GuiElement parent	= getParent();
@@ -94,9 +149,16 @@ public final class GuiTitleBar extends GuiPanel
 		setPosition(RWGui.BORDER_THICKNESS, parentHeight-RWGui.BORDER_THICKNESS, false);
 		setSize(parentWidth - RWGui.BORDER_THICKNESS*2, TITLEBAR_HEIGHT, false);
 		if (cancelButton != null)
-			cancelButton.setPosition(parentWidth - (RWGui.BORDER + RWGui.BUTTON_SIZE), CANCEL_YPOS, false);
+			cancelButton.setPosition(parentWidth - (RWGui.DEFAULT_PADDING + RWGui.BUTTON_SIZE),
+					CANCEL_YPOS, false);
 	}
 
+	/**
+	 * Displays the title bar on the screen of a player.
+	 * <p>To be used instead of player.addGuiElement(titleBar), as this method
+	 * manages the addition of all the elements making the bar up at once.
+	 * @param player	the player to show this title bar to.
+	 */
 	public void addToPlayer(Player player)
 	{
 		player.addGuiElement(this);
@@ -105,6 +167,12 @@ public final class GuiTitleBar extends GuiPanel
 			player.addGuiElement(cancelButton);
 	}
 
+	/**
+	 * Removes the title bar from the screen of a player.
+	 * <p>To be used instead of player.removeGuiElement(titleBar), as this
+	 * method removes all the elements making the bar up at once.
+	 * @param player	the player to remove this title bar from.
+	 */
 	public void removeFromPlayer(Player player)
 	{
 		player.removeGuiElement(this);
@@ -112,10 +180,5 @@ public final class GuiTitleBar extends GuiPanel
 		if (cancelButton != null)
 			player.removeGuiElement(cancelButton);
 	}
-/*
-	protected void setParent(GuiElement parent)
-	{
-		this.parent	= parent;
-	}
-*/
+
 }

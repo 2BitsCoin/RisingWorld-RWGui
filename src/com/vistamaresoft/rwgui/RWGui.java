@@ -18,7 +18,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import net.risingworld.api.Plugin;
-//import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.database.WorldDatabase;
 import net.risingworld.api.events.EventMethod;
 import net.risingworld.api.events.Listener;
@@ -30,6 +29,18 @@ import net.risingworld.api.objects.Player;
 import net.risingworld.api.utils.ImageInformation;
 import net.risingworld.api.utils.Vector2i;
 
+/**
+ * A 'holding' class with global definitions and ancillary utilities for the
+ * whole plug-in.
+ * <p><b>Important</b>: due to the way Rising World plug-ins are loaded,
+ * <b>none</b> of the classes of this package (GuiDialogueBox, GuiLayout and
+ * its sub-classes, GuiMenu and GuiUsersMenu, GuiModelessWindow, GuiTitleBar)
+ * can be used from within the onEnable() method of a plug-in, as it is
+ * impossible to be sure that, at that moment, this plug-in has already been
+ * loaded.
+ * <p>The first moment one can be sure that all plug-ins have been loaded is
+ * when the first player connects to the server (either dedicated or local).
+ */
 public class RWGui extends Plugin implements Listener
 {
 	// Standard Sizes
@@ -38,10 +49,11 @@ public class RWGui extends Plugin implements Listener
 	public static final	int		TEXTENTRY_HEIGHT= (ITEM_SIZE + 8);
 	public static final	int		TITLE_SIZE		= 18;
 	public static final	int		BORDER_THICKNESS= 2;
-	public static final	int		BORDER			= 6;
+//	public static final	int		BORDER			= 6;
+	public static final	int		DEFAULT_PADDING	= 6;
 	public static final	float	AVG_CHAR_WIDTH1	= 0.5f;		// the average char width at size 1
 	// Standard Colours: backgrounds
-	public static final	int		PANEL_COLOUR	= 0x202020E0;
+	public static final	int		PANEL_COLOUR	= 0x202020FF;
 	public static final	int		TITLEBAR_COLOUR	= 0x505050FF;
 	public static final	int		BORDER_COLOUR	= 0x909090FF;
 	public static final	int		ACTIVE_COLOUR	= 0x0060D0FF;
@@ -61,11 +73,14 @@ public class RWGui extends Plugin implements Listener
 	public static final int		ICN_UNCHECK		= 6;
 	public static final int		ICN_PLUS		= 7;
 	public static final int		ICN_MINUS		= 8;
+	public static final	int		ICN_RADIO_CHECK	= 9;
+	public static final	int		ICN_RADIO_UNCHECK	= 10;
 	public static final int		ICN_MIN				= 0;
-	public static final int		ICN_MAX				= ICN_MINUS;
+	public static final int		ICN_MAX				= ICN_RADIO_UNCHECK;
 	// LAYOUT TYPE
 	public static final int		LAYOUT_HORIZ	= 1;
 	public static final int		LAYOUT_VERT		= 2;
+	public static final int		LAYOUT_TABLE	= 3;
 	// LAYOUT Arrangements
 	public static final int		LAYOUT_H_LEFT	= 0x00;
 	public static final int		LAYOUT_H_CENTRE	= 0x01;
@@ -76,20 +91,26 @@ public class RWGui extends Plugin implements Listener
 	public static final int		LAYOUT_V_BOTTOM	= 0x10;
 	public static final int		LAYOUT_V_SPREAD	= 0x20;
 	// SELECTION STANDARD RESULT
+	/** The id reported by a click event on a close button. */
 	public static final	int		ABORT_ID		= -1;
+	/** The id reported by a click event on the default button of dialogue box. */
 	public static final	int		OK_ID			= 0;
 	// STANDARD RETURN CODES
-	public static final int		SUCCESS			= 0;
-	public static final	int		INVALID_PARAMETER	= -1;
-	public static final	int		MISSING_RESOURCE	= -2;
-	public static final	int		ITEM_NOT_FOUND		= -3;
+	/** The operation has been successful. */
+	public static final int		ERR_SUCCESS				= 0;
+	/** A parameter was out of range or invalid. */
+	public static final	int		ERR_INVALID_PARAMETER	= -1;
+	/** A resource (icon) looked for did not exist. */
+	public static final	int		ERR_MISSING_RESOURCE	= -2;
+	/** An item looked for did not exist. */
+	public static final	int		ERR_ITEM_NOT_FOUND		= -3;
 
-	private static final String	version			= "0.2.1";
-
+	private static final String	version			= "0.3.0";
+/*
 	public static interface SelectionResult
 	{
 		void onSelect(Player player, int id, int item);
-	}
+	}*/
 	//
 	// FIELDS
 	//
@@ -98,15 +119,12 @@ public class RWGui extends Plugin implements Listener
 			{	"/assets/arrowDown.png", "/assets/arrowLeft.png",
 				"/assets/arrowRight.png", "/assets/arrowUp.png",
 				"/assets/check.png", "/assets/cross.png", "/assets/uncheck.png",
-				"/assets/plus.png", "/assets/minus.png"
+				"/assets/plus.png", "/assets/minus.png",
+				"/assets/radioCheck.png", "/assets/radioUncheck.png" 
 			};
 	protected	static	String				pluginPath;
 	private		static	List<Pair<Integer,Object>>	users;
-/*
-	public RWGui()
-	{
-	}
-*/
+
 	//********************
 	// EVENTS
 	//********************
@@ -114,9 +132,6 @@ public class RWGui extends Plugin implements Listener
 	@Override
 	public void onEnable()
 	{
-		// HACK !! HACK
-		// Waiting for a better way to let the classes of the package to know
-		// the plug-in path in order to load assets
 		pluginPath	= getPath();
 		registerEventListener(this);
 		System.out.println("RWGui "+version+" loaded successfully!");
@@ -148,7 +163,7 @@ public class RWGui extends Plugin implements Listener
 	public static int setImage(GuiImage image, int iconId)
 	{
 		if (iconId < ICN_MIN || iconId > ICN_MAX)
-			return INVALID_PARAMETER;
+			return ERR_INVALID_PARAMETER;
 		if (stockIcons[iconId] == null)
 		{
 			try
@@ -157,11 +172,11 @@ public class RWGui extends Plugin implements Listener
 			} catch (IOException e)
 			{
 				e.printStackTrace();
-				return MISSING_RESOURCE;
+				return ERR_MISSING_RESOURCE;
 			}
 		}
 		image.setImage(stockIcons[iconId]);
-		return SUCCESS;
+		return ERR_SUCCESS;
 	}
 
 	/**
@@ -170,7 +185,8 @@ public class RWGui extends Plugin implements Listener
 
 		@param	text		the text to measure
 		@param	fontSize	the size of the font used
-		@return	an estimate of the text width corresponding to the given font size
+		@return	an estimate of the text width in pixels corresponding to the
+				given font size
 	*/
 	public static float getTextWidth(String text, float fontSize)
 	{
@@ -191,8 +207,14 @@ public class RWGui extends Plugin implements Listener
 		{
 			if (element instanceof GuiLabel)
 			{
-				sizes.y	= ((GuiLabel) element).getFontSize();
-				sizes.x	= (int)RWGui.getTextWidth(((GuiLabel) element).getText(), sizes.y);
+				String[]	lines		= ((GuiLabel) element).getText().split("\n");
+				int			fontSize	= ((GuiLabel) element).getFontSize();
+				int			maxLength	= 0;
+				for (String line : lines)
+					if (line.length() > maxLength)
+						maxLength		= line.length();
+				sizes.x					= (int)(fontSize * RWGui.AVG_CHAR_WIDTH1 * maxLength);
+				sizes.y					=  fontSize * lines.length;
 			}
 			else
 			{
@@ -224,9 +246,18 @@ public class RWGui extends Plugin implements Listener
 		public	void	setR(R r)	{ this.r = r; }
 	}
 
-	public abstract interface RWGuiCallback//<T> extends Callback<T>
+	/**
+	 * An interface for the callback objects reporting click and text entry
+	 * events to menus, dialogue boxes and similar.
+	 * <p><b>Important</b>: Due to the way Rising World plug-ins are loaded,
+	 * this interface <b>cannot be instantiated</b> from within the main Java
+	 * class of a plug-in; a separate class has to be used to contain and
+	 * instantiate the actual callback object (typically, a class sub-classing
+	 * the GUI element for which the callback is used: a GuiMenu,
+	 * a GuiDialogueBox, etc...).
+	 */
+	public abstract interface RWGuiCallback
 	{
-//		public default void		onCall(T paramT)	{	}
 		public abstract void	onCall(Player player, int id, Object data);
 	}
 
@@ -234,10 +265,6 @@ public class RWGui extends Plugin implements Listener
 	// INTERNAL HELPER METHODS
 	//********************
 
-	/**
-		An interface used by some RWGui classes implementing semi-automatic
-		re-layout.
-	*/
 /*	protected static interface GuiLayoutElement
 	{
 		public void	close(Player player);
