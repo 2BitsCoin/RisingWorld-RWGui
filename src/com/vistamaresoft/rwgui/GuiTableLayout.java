@@ -78,7 +78,7 @@ public class GuiTableLayout extends GuiLayout
 		if (idx >= 0 && idx < maxNumOfCols)
 		{
 			colFlags[idx]	= flag;
-			if ( (flag & RWGui.LAYOUT_H_RIGHT) != 0)
+			if ( (flag & RWGui.LAYOUT_H_RIGHT) != 0 && children != null)
 				for (int i = idx; i < children.size(); i += maxNumOfCols)
 					if (children.get(i) != null)
 						children.get(i).getL().setPivot(PivotPosition.TopRight);
@@ -116,7 +116,14 @@ public class GuiTableLayout extends GuiLayout
 			if (element == null)
 				children.add(null);
 			else
+			{
+				int	col	= children.size() % maxNumOfCols;
 				super.addChild(element, id, data);
+				// if new child belongs to a column with RIGHT flag,
+				// set TopRight pivot position
+				if ( (colFlags[col] & RWGui.LAYOUT_H_RIGHT) != 0)
+					element.setPivot(PivotPosition.TopRight);
+			}
 		}
 	}
 
