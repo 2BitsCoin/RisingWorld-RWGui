@@ -14,11 +14,8 @@ package com.vistamaresoft.rwgui;
 
 import net.risingworld.api.Plugin;
 import net.risingworld.api.events.EventMethod;
-import net.risingworld.api.events.Listener;
 import net.risingworld.api.events.player.gui.PlayerGuiElementClickEvent;
 import net.risingworld.api.gui.GuiLabel;
-import net.risingworld.api.gui.GuiPanel;
-import net.risingworld.api.gui.PivotPosition;
 import net.risingworld.api.objects.Player;
 
 /**
@@ -26,8 +23,7 @@ import net.risingworld.api.objects.Player;
  * with a title and a close button, and a number of text lines.
  * <p>The message box manages its own event Listener; it also turns the mouse
  * cursor on on display and off on hiding.
- * <p>The message box manages the close button in the title bar, hiding the box
- * from the player screen and turning off the mouse cursor.
+ * <p>GuiMessageBox inherits all GuiModalWindow behaviours.
  * <p>This message box is practically "fire-and-forget": once it is shown, the
  * player can only read it and then click on the close button to dismiss it.
  * <p><b>Important</b>: due to the way Rising World plug-ins are loaded,
@@ -38,14 +34,9 @@ import net.risingworld.api.objects.Player;
  * it is safe to use this class, is when (or after) the first player connects
  * to the server (either dedicated or local).
  */
-public class GuiMessageBox extends GuiPanel implements Listener
+public class GuiMessageBox extends GuiModalWindow	//GuiPanel implements Listener
 {
-	private static final	int		ITEM_HEIGHT	= RWGui.ITEM_SIZE + RWGui.DEFAULT_PADDING;
-
 	private	MBThread	mbThread;
-	private	Plugin		plugin;
-	private	GuiTitleBar	titleBar;
-	private	GuiLabel[]	textLbl;
 
 	/**
 	 * Creates a new GuiMesageBox.
@@ -67,39 +58,21 @@ public class GuiMessageBox extends GuiPanel implements Listener
 	 */
 	public GuiMessageBox(Plugin plugin, Player player, String title, String[] texts, int delay)
 	{
-		super();
-		this.plugin	= plugin;
-		setPivot(PivotPosition.Center);
-		setPosition(0.5f, 0.5f, true);
-		setBorderColor(RWGui.BORDER_COLOUR);
-		setBorderThickness(RWGui.BORDER_THICKNESS, false);
-		setColor(RWGui.PANEL_COLOUR);
-		titleBar	= new GuiTitleBar(this, title, true);
-		int			height	= GuiTitleBar.TITLEBAR_HEIGHT + RWGui.DEFAULT_PADDING + ITEM_HEIGHT*texts.length;
-		int			y		= height - (GuiTitleBar.TITLEBAR_HEIGHT + RWGui.DEFAULT_PADDING + RWGui.ITEM_SIZE);
-		int			width	= (int)RWGui.getTextWidth(title, RWGui.TITLE_SIZE);
-		textLbl				= new GuiLabel[texts.length];
-		for (int i = 0; i < texts.length; i++)
+		super(plugin, title, RWGui.LAYOUT_VERT, null);
+		for (String text : texts)
 		{
-			int		textW	= (int)RWGui.getTextWidth(texts[i], RWGui.ITEM_SIZE);
-			if (width < textW)
-				width		= textW;
-			textLbl[i]		= new GuiLabel(texts[i], RWGui.DEFAULT_PADDING, y, false);
-			textLbl[i].setFontSize(RWGui.ITEM_SIZE);
-			addChild(textLbl[i]);
-			player.addGuiElement(textLbl[i]);
+			addChild(new GuiLabel(text, 0, 0, false));
 		}
-		setSize(width, height + RWGui.DEFAULT_PADDING*2, false);
-		titleBar.relayout();
-		titleBar.addToPlayer(player);
-		player.addGuiElement(this);
-		plugin.registerEventListener(this);
-		player.setMouseCursorVisible(true);
 		if (delay > 0)
 		{
 			mbThread	= new MBThread(this, player, delay);
 			mbThread.start();
 		}
+	}
+
+	public GuiMessageBox(Plugin plugin, Player player, String title, String text, int delay)
+	{
+		this(plugin, player, title, new String[]{text}, delay);
 	}
 
 	@EventMethod
@@ -109,25 +82,9 @@ public class GuiMessageBox extends GuiPanel implements Listener
 		{
 			if (mbThread != null)
 				mbThread.interrupt();
-			free(event.getPlayer());
+			pop(event.getPlayer());
 			return;
 		}
-	}
-
-	private void free(Player player)
-	{
-		plugin.unregisterEventListener(this);
-		for (int i = 0; i < textLbl.length; i++)
-		{
-			removeChild(textLbl[i]);
-			player.removeGuiElement(textLbl[i]);
-			textLbl[i]	= null;
-		}
-		titleBar.removeFromPlayer(player);
-		titleBar.free();
-		titleBar	= null;
-		player.removeGuiElement(this);
-		player.setMouseCursorVisible(false);
 	}
 
 	private static class MBThread extends Thread
@@ -153,7 +110,7 @@ public class GuiMessageBox extends GuiPanel implements Listener
 			{
 				return;
 			}
-			messageBox.free(player);
+			messageBox.pop(player);
 		}
 	}
 }

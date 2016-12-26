@@ -105,12 +105,8 @@ public class RWGui extends Plugin implements Listener
 	/** An item looked for did not exist. */
 	public static final	int		ERR_ITEM_NOT_FOUND		= -3;
 
-	private static final String	version			= "0.3.0";
-/*
-	public static interface SelectionResult
-	{
-		void onSelect(Player player, int id, int item);
-	}*/
+	private static final String	version			= "0.4.0";
+
 	//
 	// FIELDS
 	//
@@ -265,14 +261,6 @@ public class RWGui extends Plugin implements Listener
 	// INTERNAL HELPER METHODS
 	//********************
 
-/*	protected static interface GuiLayoutElement
-	{
-		public void	close(Player player);
-		public void free();
-		public void	layout(boolean bottomUp);
-		public void	show(Player player);
-	}
-*/
 	protected static List<Pair<Integer,Object>> getPlayers(Plugin plugin)
 	{
 		if (users != null)

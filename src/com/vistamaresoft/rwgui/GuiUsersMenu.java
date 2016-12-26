@@ -60,7 +60,7 @@ public class GuiUsersMenu extends GuiMenu
 		{
 			for (Pair<Integer,Object> entry : users)
 				if (entry.getL() != excludeId)
-					addItem((String)entry.getR(), entry.getL(), entry.getR());
+					addChild((String)entry.getR(), entry.getL(), entry.getR());
 		}
 	}
 	

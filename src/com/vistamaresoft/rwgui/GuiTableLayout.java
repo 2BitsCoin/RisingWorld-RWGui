@@ -211,19 +211,8 @@ public class GuiTableLayout extends GuiLayout
 
 		int		spacingH	= padding;
 		int		spacingW	= padding;
-		// if layout dimensions are greater than min dimensions
-		// compute spacing between columns and between rows
-/*		if (minWidth > width)
-		{
-			spacingW	= (minWidth - width) / (maxNumOfCols - 1);
-			width	= minWidth;
-		}
-		if (minHeight > height)
-		{
-			spacingH	= (minHeight - height) / (maxNumOfRows - 1);
-			height	= minHeight;
-		}
-*/		// scan cells again to position each cell
+
+		// scan cells again to position each cell
 		count	= 0;
 		int		x			= margin;			// x and y point to the table top left corner
 		int		y			= height - margin;
