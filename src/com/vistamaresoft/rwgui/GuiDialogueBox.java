@@ -92,9 +92,9 @@ public class GuiDialogueBox extends GuiPanel implements Listener
 			layout		= new GuiHorizontalLayout(RWGui.LAYOUT_V_TOP & RWGui.LAYOUT_H_LEFT);
 		else
 			layout		= new GuiVerticalLayout(RWGui.LAYOUT_V_TOP & RWGui.LAYOUT_H_LEFT);
-//		layout.setMargin(RWGui.DEFAULT_PADDING);
+		layout.setMargin(RWGui.DEFAULT_PADDING);
 		layout.setPivot(PivotPosition.BottomLeft);
-		layout.setPosition(RWGui.DEFAULT_PADDING, RWGui.DEFAULT_PADDING, false);
+		layout.setPosition(/*RWGui.DEFAULT_PADDING, RWGui.DEFAULT_PADDING*/0, 0, false);
 		super.addChild(layout);
 		// we can't directly add the title bar, as this.addChild()
 		// is overriden to add to the layout
@@ -180,17 +180,23 @@ public class GuiDialogueBox extends GuiPanel implements Listener
 
 	public void layout()
 	{
-		layout.layout();			// layout with no constrain
+		int	tbw		= titleBar.getMinWidth();
+		layout.layout(tbw, 0);			// require the layout to be at least as wide as the title bar
 		int height	= (int)layout.getHeight();
 		int	width	= (int)layout.getWidth();
-//		layout.layout(width, height);	// re-layout within actual width and height
-		width		+= RWGui.DEFAULT_PADDING*2;
+/*		// add a border around the internal layout
+//		width		+= RWGui.DEFAULT_PADDING*2;
 		height		+= (int)titleBar.getHeight();
-		int	tbw		= titleBar.getMinWidth();
-		if (tbw > width)
-			width	= tbw;
-		// add a border around the internal layout
-		setSize(width, height + RWGui.DEFAULT_PADDING, false);
+//		if (tbw > width)
+//			width	= tbw;*/
+		// place the layout inside any dlg box border
+		int	borderW	= (int)getBorderThickness();
+		layout.setPosition(borderW, borderW, false);
+		layout.setSize(width - borderW*2, height - borderW, false);
+		// final size of the dialogue box
+		height		+= (int)titleBar.getHeight();
+		setSize(width, height, false);
+		// tell the title bar to re-position itself within the dialogue box
 		titleBar.relayout();
 	}
 

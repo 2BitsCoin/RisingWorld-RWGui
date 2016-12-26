@@ -62,13 +62,19 @@ public class GuiLayout extends GuiPanel
 	As this method lays its children out recursively, it is usually
 	necessary to call this method manually only for the top layout of a
 	layout hierarchy.
+	@param	minWidth	the minimum width which the context within which the
+						is placed requires the layout to have; use 0 if there
+						no external constrains.
+	@param	minHeight	the minimum height which the context within which the
+						is placed requires the layout to have; use 0 if there
+						no external constrains.
 */
-	public void layout()
+	public void layout(int minWidth, int minHeight)
 	{
-		layout(0, 0, true);			// layout with no constrain
+		layout(minWidth, minHeight, true);		// layout with no constrain
 		int height	= (int)getHeight();
 		int	width	= (int)getWidth();
-		layout(width, height, false);	// re-layout within actual width and height
+		layout(width, height, false);			// re-layout within actual width and height
 	}
 
 	/**

@@ -146,8 +146,12 @@ public final class GuiTitleBar extends GuiPanel
 			return;
 		int	parentHeight	= (int)parent.getHeight();
 		int	parentWidth		= (int)parent.getWidth();
-		setPosition(RWGui.BORDER_THICKNESS, parentHeight-RWGui.BORDER_THICKNESS, false);
-		setSize(parentWidth - RWGui.BORDER_THICKNESS*2, TITLEBAR_HEIGHT, false);
+		int	parentBorder	= (int)parent.getBorderThickness();
+		// position the title bat at the top left corner of the parent, but
+		// inside the parent border, if any
+		setPosition(parentBorder, parentHeight-parentBorder, false);
+		// size the title bar to occupy the full parent width minus any border
+		setSize(parentWidth - parentBorder*2, TITLEBAR_HEIGHT - parentBorder, false);
 		if (cancelButton != null)
 			cancelButton.setPosition(parentWidth - (RWGui.DEFAULT_PADDING + RWGui.BUTTON_SIZE),
 					CANCEL_YPOS, false);

@@ -80,13 +80,12 @@ public class GuiHorizontalLayout extends GuiLayout
 		Vector2i[]	elemSizes	= new Vector2i[children.size()];
 		if (reset)
 		{
-			minHeight	= height	= 0;
-			minWidth	= width		= 0;
+			width		= minWidth	= 0;
+			height		= minHeight;
 		}
 		else
 		{
 			width		= 0;
-//			minWidth	= (int)getWidth();
 			height		= (int)getHeight() - margin*2;	// the height within which to fit children
 		}												// excludes top and bottom margin
 		int		count	= 0;

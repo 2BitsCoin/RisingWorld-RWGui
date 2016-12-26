@@ -79,14 +79,13 @@ public class GuiVerticalLayout extends GuiLayout
 		Vector2i[]	elemSizes	= new Vector2i[children.size()];
 		if (reset)
 		{
-			minHeight	= height	= 0;
-			minWidth	= width		= 0;
+			width	= minWidth;
+			height	= minHeight	= 0;
 		}
 		else
 		{
-			height		= 0;
-//			minHeight	= (int)getHeight();
 			width		= (int)getWidth() - margin*2;	// the width within which to fit children
+			height		= 0;
 		}												// excludes left and right margin
 		int		count	= 0;
 		for (Pair<GuiElement,?> item : children)
