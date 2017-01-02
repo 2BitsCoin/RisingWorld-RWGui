@@ -55,7 +55,7 @@ public class GuiModelessWindow extends GuiPanel
 	//
 	private	Player		player;
 	private	GuiLabel[]	labels;
-	private GuiTitleBar	guiTitleBar;
+	private GuiTitleBar	titleBar;
 
 	/**
 	 * Creates a modeless window with given title and sequence of textual strings.
@@ -79,8 +79,8 @@ public class GuiModelessWindow extends GuiPanel
 		setBorderThickness(RWGui.BORDER_THICKNESS, false);
 		setColor(PANEL_COLOUR);
 		setVisible(true);
-		guiTitleBar	= new GuiTitleBar(this, titleText, false);
-		guiTitleBar.addToPlayer(player);
+		titleBar	= new GuiTitleBar(this, titleText, false);
+		titleBar.addToPlayer(player);
 		player.addGuiElement(this);
 		if (texts != null)
 			setTexts(texts);
@@ -99,7 +99,7 @@ public class GuiModelessWindow extends GuiPanel
 		int		panelHeight	= RWGui.TITLE_SIZE + RWGui.ITEM_SIZE*texts.size() +
 				RWGui.DEFAULT_PADDING*(texts.size()+3);
 		// compute width from number of chars in title and in text lines
-		int		panelWidth	= (int)(RWGui.AVG_CHAR_WIDTH1 * guiTitleBar.getTitleText().length() *
+		int		panelWidth	= (int)(RWGui.AVG_CHAR_WIDTH1 * titleBar.getTitleText().length() *
 				RWGui.TITLE_SIZE);
 		int		textWidth;
 		for (int i = 0; i < numOfTexts; i++)
@@ -109,7 +109,7 @@ public class GuiModelessWindow extends GuiPanel
 		// Panel size are known: compute position of each item
 		setPosition(PANEL_XPOS, PANEL_YPOS+panelHeight, false);
 		setSize(panelWidth, panelHeight, false);
-		guiTitleBar.relayout();
+		titleBar.relayout();
 		// the strings
 		releaseTexts();
 		int		yPos	= panelHeight - TEXT_YDELTA;
@@ -134,10 +134,11 @@ public class GuiModelessWindow extends GuiPanel
 	 */
 	public void free()
 	{
-		releaseTexts();
-		guiTitleBar.free();
-		guiTitleBar	= null;
+		titleBar.removeFromPlayer(player);
+		titleBar.free();
+		titleBar	= null;
 		player.removeGuiElement(this);
+		releaseTexts();
 	}
 
 	private void releaseTexts()

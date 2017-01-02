@@ -128,9 +128,25 @@ public class GuiMenu extends GuiModalWindow
 			scrollDown();
 			return;
 		}
+
+		Player player	= event.getPlayer();
+		// it is not possible to simply use pop(), as pop() calls free()
+		// and super.onClick() requires the children of this to still be
+		// there. Then, the contents of pop() has been split in everything
+		// but free() before the call to super.onClick() and the call to
+		// free() after it.
+		if (autoClose)
+			close(player);
+		if (prevWindow != null)
+		{
+			prevWindow.show(player);
+			player.setMouseCursorVisible(true);
+		}
+		else
+			player.setMouseCursorVisible(false);
 		super.onClick(event);
 		if (autoClose)
-			pop(event.getPlayer());
+			free();
 	}
 
 	//********************

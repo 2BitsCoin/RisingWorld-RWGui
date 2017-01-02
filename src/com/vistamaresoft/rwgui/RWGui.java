@@ -105,7 +105,7 @@ public class RWGui extends Plugin implements Listener
 	/** An item looked for did not exist. */
 	public static final	int		ERR_ITEM_NOT_FOUND		= -3;
 
-	private static final String	version			= "0.4.0";
+	private static final String	version			= "0.4.1";
 
 	//
 	// FIELDS
@@ -119,7 +119,7 @@ public class RWGui extends Plugin implements Listener
 				"/assets/radioCheck.png", "/assets/radioUncheck.png" 
 			};
 	protected	static	String				pluginPath;
-	private		static	List<Pair<Integer,Object>>	users;
+	private		static	List<Pair<Integer,String>>	users;
 
 	//********************
 	// EVENTS
@@ -222,6 +222,83 @@ public class RWGui extends Plugin implements Listener
 	}
 
 	/**
+	 * Returns the name of a player given his DB ID. Returns null if such a
+	 * name does not exists.
+	 * @param	plugin	The plug-in making the request. This is only needed to
+	 *					access the relevant World database and has no side
+	 *					effects on the plug-in itself.
+	 * @param	dbId	the DB ID of the player
+	 * @return	the name of the player with that DB ID or null if not found.
+	 */
+	public static String getPlayerNameFromId(Plugin plugin, int dbId)
+	{
+		if (users == null)
+			getPlayers(plugin);
+		for(Pair<Integer,String> user : users)
+		{
+			if (user.getL() == dbId)
+				return user.getR();
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the DB ID of a player given his name. Returns 0 if such a
+	 * DB ID does not exists.
+	 * @param	plugin	The plug-in making the request. This is only needed to
+	 *					access the relevant World database and has no side
+	 *					effects on the plug-in itself.
+	 * @param	name	the name of the player
+	 * @return	the DB ID of the player with that name or 0 if not found.
+	 */
+	public static int getPlayerDbIdFromName(Plugin plugin, String name)
+	{
+		if (users == null)
+			getPlayers(plugin);
+		for(Pair<Integer,String> user : users)
+		{
+			if (user.getR().equals(name))
+				return user.getL();
+		}
+		return 0;
+	}
+
+	/**
+	 * Returns the list of players known to the World (i.e. who connected at
+	 * least once).
+	 * <p>The list is a List of Pair's each made of an int and a String, the
+	 * integer being the DB ID of player and the String his name of the player.
+	 * <p>The list is sorted by names, in native alphabetical order.
+	 * @param	plugin	The plug-in making the request. This is only needed to
+	 *					access the relevant World database and has no side
+	 *					effects on the plug-in itself.
+	 * @return	a List of DB ID/name player data Pair's.
+	 */
+	public static List<Pair<Integer,String>> getPlayers(Plugin plugin)
+	{
+		if (users != null)
+			return users;
+		users	= new ArrayList<Pair<Integer,String>>();
+		WorldDatabase	db = plugin.getWorldDatabase();
+		try(ResultSet result = db.executeQuery("SELECT `ID`,`Name` FROM `Player` ORDER BY `Name`ASC"))
+		{
+			while(result.next())
+			{
+				int		id		= result.getInt(1);
+				String	name	= result.getString(2);
+				Pair<Integer,String>	item	= new Pair<Integer,String>(id, name);
+				users.add(item);
+			}
+			result.close();
+		}
+		catch(SQLException e)
+		{
+			//on errors, do nothing and simply use what we got.
+		}
+		return users;
+	}
+
+	/**
 		A utility class to hold two related objects.
 
 		@param	<L>	the first (left) element of the pair; can be any Java object
@@ -260,29 +337,5 @@ public class RWGui extends Plugin implements Listener
 	//********************
 	// INTERNAL HELPER METHODS
 	//********************
-
-	protected static List<Pair<Integer,Object>> getPlayers(Plugin plugin)
-	{
-		if (users != null)
-			return users;
-		users	= new ArrayList<Pair<Integer,Object>>();
-		WorldDatabase	db = plugin.getWorldDatabase();
-		try(ResultSet result = db.executeQuery("SELECT `ID`,`Name` FROM `Player` ORDER BY `Name`ASC"))
-		{
-			while(result.next())
-			{
-				int		id		= result.getInt(1);
-				String	name	= result.getString(2);
-				Pair<Integer,Object>	item	= new Pair<Integer,Object>(id, name);
-				users.add(item);
-			}
-			result.close();
-		}
-		catch(SQLException e)
-		{
-			//on errors, do nothing and simply use what we got.
-		}
-		return users;
-	}
 
 }

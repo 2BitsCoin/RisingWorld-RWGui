@@ -386,10 +386,16 @@ public class GuiModalWindow extends GuiPanel implements Listener
 	 */
 	public void free()
 	{
-		titleBar.free();
-		titleBar	= null;
-		layout.free();
-		layout		= null;
+		if (titleBar != null)
+		{
+			titleBar.free();
+			titleBar	= null;
+		}
+		if (layout != null)
+		{
+			layout.free();
+			layout		= null;
+		}
 	}
 
 }

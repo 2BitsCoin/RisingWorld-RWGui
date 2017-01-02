@@ -55,12 +55,12 @@ public class GuiUsersMenu extends GuiMenu
 	{
 		super(plugin, titleText, callback);
 
-		List<Pair<Integer,Object>>	users	= RWGui.getPlayers(plugin);
+		List<Pair<Integer,String>>	users	= RWGui.getPlayers(plugin);
 		if (users != null)
 		{
-			for (Pair<Integer,Object> entry : users)
+			for (Pair<Integer,String> entry : users)
 				if (entry.getL() != excludeId)
-					addChild((String)entry.getR(), entry.getL(), entry.getR());
+					addChild(entry.getR(), entry.getL(), entry.getR());
 		}
 	}
 	
