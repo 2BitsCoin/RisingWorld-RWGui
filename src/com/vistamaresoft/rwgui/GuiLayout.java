@@ -43,11 +43,11 @@ import net.risingworld.api.objects.Player;
 public class GuiLayout extends GuiPanel
 {
 	protected	ArrayList<Pair<GuiElement,Pair<Integer,Object>>>
-													children	= null;
-	protected	int									flags		= RWGui.LAYOUT_V_TOP & RWGui.LAYOUT_H_LEFT;
-	int									margin	= 0;
-	int									padding	= RWGui.DEFAULT_PADDING;
-	protected	int									shown		= 0;
+						children	= null;
+	protected	int		flags		= RWGui.LAYOUT_V_TOP & RWGui.LAYOUT_H_LEFT;
+	int					margin		= 0;
+	int					padding		= RWGui.DEFAULT_PADDING;
+	protected	int		shown		= 0;
 
 	public GuiLayout(int flags)
 	{
