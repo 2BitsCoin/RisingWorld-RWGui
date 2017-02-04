@@ -57,18 +57,18 @@ public class GuiLayout extends GuiPanel
 	}
 
 	/**
-	Arranges the elements inside the layout according to the layout type and settings.
+		Arranges the elements inside the layout according to the layout type and settings.
 
-	As this method lays its children out recursively, it is usually
-	necessary to call this method manually only for the top layout of a
-	layout hierarchy.
-	@param	minWidth	the minimum width which the context within which the
-						is placed requires the layout to have; use 0 if there
-						no external constrains.
-	@param	minHeight	the minimum height which the context within which the
-						is placed requires the layout to have; use 0 if there
-						no external constrains.
-*/
+		As this method lays its children out recursively, it is usually
+		necessary to call this method manually only for the top layout of a
+		layout hierarchy.
+		@param	minWidth	the minimum width which the context within which the
+							is placed requires the layout to have; use 0 if there
+							no external constrains.
+		@param	minHeight	the minimum height which the context within which the
+							is placed requires the layout to have; use 0 if there
+							no external constrains.
+	*/
 	public void layout(int minWidth, int minHeight)
 	{
 		layout(minWidth, minHeight, true);		// layout with no constrain
@@ -235,12 +235,22 @@ public class GuiLayout extends GuiPanel
 			((GuiTextField)element).setEditable(id != null);
 			((GuiTextField)element).setListenForInput(id != null);
 		}
-		element.setPivot(PivotPosition.TopLeft);
+		if (this instanceof GuiVerticalLayout)
+		{
+			if ( (flags & RWGui.LAYOUT_H_RIGHT) != 0)
+				element.setPivot(PivotPosition.TopRight);
+			else if( (flags & RWGui.LAYOUT_H_CENTRE) != 0)
+					element.setPivot(PivotPosition.Center);
+			else
+				element.setPivot(PivotPosition.TopLeft);
+		}
+		else
+			element.setPivot(PivotPosition.TopLeft);
 		super.addChild(element);
 	}
 
 	/**
-	 * Removes a GuiElement from the direct children of the dialogue box.
+	 * Removes a GuiElement from the direct children of the layout.
 	 * 
 	 * If the element is not a direct child of the layout, the method does
 	 * nothing.
@@ -358,9 +368,21 @@ public class GuiLayout extends GuiPanel
 		return null;
 	}
 
+	//
+	// PROTECTED METHODS
+	//
 	void layout(int minWidth, int minHeight, boolean reset)
 	{
 		
 	}
 
+	// Adds / Removes elements directly to the base GuiPanel, bypassing layout
+	void baseAddChild(GuiElement element)
+	{
+		super.addChild(element);
+	}
+	void baseRemoveChild(GuiElement element)
+	{
+		super.removeChild(element);
+	}
 }

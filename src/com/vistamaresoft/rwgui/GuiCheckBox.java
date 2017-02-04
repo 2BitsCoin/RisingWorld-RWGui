@@ -18,6 +18,19 @@ import net.risingworld.api.gui.GuiImage;
 import net.risingworld.api.gui.GuiLabel;
 import net.risingworld.api.gui.PivotPosition;
 
+/**
+ * Implements a check or radio box, according to the constructor parameters.
+ * <p>Both types can have three states: DISABLED, UNCHECKED and CHECKED. Unless
+ * they are in the DISABLED state, they generate notifications via the callback
+ * object of the GuiModalWindow they belong to.
+ * <p>Both also manage state changes (CHECKED to UNCHECKED and vice versa)
+ * upon click events. Radio boxes also manage unchecking other radio boxes
+ * belonging to the same immediate layout parent, when changing into CHECKED.
+ * If click event notification is required, which is usually the case, a
+ * non-null id (and optionally data) parameter in the constructor is required.
+ * Passing an id (and a data object) when adding the box to a GuiLayout, as
+ * when adding other non-layout children, has no effect.
+ */
 public class GuiCheckBox extends GuiLayout
 {
 	public static final	int		DISABLED	= -1;
@@ -34,6 +47,17 @@ public class GuiCheckBox extends GuiLayout
 	private boolean		radio;
 	private	int			state;
 
+	/**
+	 * Constructs a check/radio box with text as a label, initialState as
+	 * current state and click id and data.
+	 * @param	text			the text of the label
+	 * @param	initialState	the initial state (one of DISABLED, CHECKED or UNCHECKED)
+	 * @param	radio			if true the box is a radio box, if false it is a check box
+	 * @param	id				the click id notified to the callback of the
+	 *							GuiModalwindow this box belongs to
+	 * @param	data			the click data notified to the callback of the
+	 *							GuiModalwindow this box belongs to (optional)
+	 */
 	public GuiCheckBox(String text, int initialState, boolean radio, Integer id, Object data)
 	{
 		super(RWGui.LAYOUT_H_LEFT | RWGui.LAYOUT_V_MIDDLE);
@@ -45,29 +69,47 @@ public class GuiCheckBox extends GuiLayout
 		RWGui.setImage(checkBox, state == CHECKED ?
 				(radio ? RWGui.ICN_RADIO_CHECK : RWGui.ICN_CHECK) :
 				(radio ? RWGui.ICN_RADIO_UNCHECK : RWGui.ICN_UNCHECK) );
+		super.addChild(checkBox, RWGui.PGUP_ID, null);	// use a dummy id to have it clickable
 		checkBox.setPivot(PivotPosition.BottomLeft);
-		addChild(checkBox);
 		// The LABEL
 		label	= new GuiLabel(text, RWGui.BUTTON_SIZE + RWGui.DEFAULT_PADDING,
 				(RWGui.BUTTON_SIZE - RWGui.ITEM_SIZE) / 2, false);
-		checkBox.setPivot(PivotPosition.BottomLeft);
-		addChild(label);
+		super.addChild(label, RWGui.PGUP_ID, null);
+		label.setPivot(PivotPosition.BottomLeft);
 		setState(initialState);
 	}
 
+	/**	Queries the type of the box.
+	 * @return	true for radio boxes and false for check boxes.
+	 */
 	public boolean isRadio()	{ return radio; }
 
+	/**
+	 * Queries the state of the box.
+	 * @return	one of DISABLED, CHECKED or UNCHECKED.
+	 */
 	public int getState()		{ return state; }
 
+	/**
+	 * Sets the new state of the box. Any unrecognised state is forced to UNCHECKED.
+	 * @param newState	the new state (one of DISABLED, CHECKED or UNCHECKED).
+	 */
 	public void setState(int newState)
 	{
+		if (newState < DISABLED || newState > CHECKED)
+			newState	= UNCHECKED;
+		if (newState == state)
+			return;
 		state	= newState;
 		RWGui.setImage(checkBox, state == CHECKED ?
 				(radio ? RWGui.ICN_RADIO_CHECK : RWGui.ICN_CHECK) :
 				(radio ? RWGui.ICN_RADIO_UNCHECK : RWGui.ICN_UNCHECK) );
 		label.setFontColor(state == DISABLED ? RWGui.TEXT_DIM_COLOUR : RWGui.TEXT_COLOUR);
+		setClickable(newState != DISABLED);
+		checkBox.setClickable(newState != DISABLED);
+		label.setClickable(newState != DISABLED);
 		// with radio buttons, toggle other radios in the same parent
-		if (radio && state == CHECKED)
+		if (radio && newState == CHECKED)
 		{
 			GuiElement	parent	= getParent();
 			if (parent != null && parent instanceof GuiLayout)
@@ -77,10 +119,9 @@ public class GuiCheckBox extends GuiLayout
 				{
 					if (item.getL() instanceof GuiCheckBox)
 					{
-						// if the child is a GuiCheckBox, is not a radio box and is checked
-						// un-check it
+						// if the child is a GuiCheckBox, is a radio box and is checked, un-check it
 						GuiCheckBox	box	= (GuiCheckBox)item.getL();
-						if (!box.isRadio() && box.getState() == CHECKED)
+						if (box.isRadio() && box.getState() == CHECKED && box != this)
 							box.setState(UNCHECKED);
 					}
 				}
@@ -88,8 +129,12 @@ public class GuiCheckBox extends GuiLayout
 		}
 	}
 
+	/**
+	 * Places the image and the label in the containing panel and sets the
+	 * panel sizes.
+	 */
 	@Override
-	public void layout(int minWidth, int minHeight, boolean reset)
+	void layout(int minWidth, int minHeight, boolean reset)
 	{
 		int		fontSize	= label.getFontSize();
 		int		height;
@@ -98,7 +143,7 @@ public class GuiCheckBox extends GuiLayout
 		{
 			height	= label.getFontSize();
 			checkBox.setPosition(margin, margin + (height - RWGui.BUTTON_SIZE) / 2, false);
-			label.setPosition(margin + RWGui.BUTTON_SIZE + padding, 0, false);
+			label.setPosition(margin + RWGui.BUTTON_SIZE + padding, margin, false);
 		}
 		// if check box taller than label, align label at the middle of check box
 		else
@@ -110,27 +155,43 @@ public class GuiCheckBox extends GuiLayout
 		}
 		// set total panel sizes
 		setSize(margin * 2 + RWGui.BUTTON_SIZE + padding + RWGui.getTextWidth(label.getText(), fontSize),
-				height + padding * 2, false);
+				height + margin * 2, false);
 	}
 
+	/**
+	 * Returns the id associated with the GuiCheckBox if element is any of the
+	 * GuiElement making it up and the state is not DISABLED.
+	 * 
+	 * @param	element	the GuiElement to look for.
+	 * @return	the id associated with the GuiCheckBox if element
+	 *			belongs to it, null if does not.
+	 */
 	@Override
 	public Integer getItemId(GuiElement element)
 	{
 		if (state != DISABLED && (element == this || element == checkBox || element == label) )
 		{
-			// flip state
-			setState(1 - state);
+			// set RADIO to CHECKED or FLIP CHECKBOX state
+			setState(radio ? CHECKED : 1 - state);
 			return id;
 		}
 		return null;
 	}
 
+	/**
+	 * Returns the id and data pair associated with the GuiCheckBox if element
+	 * is any of the GuiElement making it up and the state is not DISABLED.
+	 * 
+	 * @param	element	the GuiElement to look for.
+	 * @return	the id and data pair associated with the GuiCheckBox if element
+	 *			belongs to it, null if does not.
+	 */
 	@Override
 	public Pair<Integer,Object> getItemData(GuiElement element)
 	{
 		Integer		myId = getItemId(element);
 		if (myId != null)
-			return new Pair<Integer, Object>(id, data);
+			return new Pair<Integer, Object>(myId, data);
 		return null;
 	}
 

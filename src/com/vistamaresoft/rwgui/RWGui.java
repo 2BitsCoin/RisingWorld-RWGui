@@ -90,11 +90,16 @@ public class RWGui extends Plugin implements Listener
 	public static final int		LAYOUT_V_MIDDLE	= 0x08;
 	public static final int		LAYOUT_V_BOTTOM	= 0x10;
 	public static final int		LAYOUT_V_SPREAD	= 0x20;
-	// SELECTION STANDARD RESULT
-	/** The id reported by a click event on a close button. */
-	public static final	int		ABORT_ID		= -1;
+
+	// STANDARD CONTROL ID's
 	/** The id reported by a click event on the default button of dialogue box. */
 	public static final	int		OK_ID			= 0;
+	/** The id reported by a click event on a close button. */
+	public static final	int		ABORT_ID		= -1;
+	// Id's used internally
+	protected static final	int	PGUP_ID		= -2;
+	protected static final	int	PGDN_ID		= -3;
+
 	// STANDARD RETURN CODES
 	/** The operation has been successful. */
 	public static final int		ERR_SUCCESS				= 0;
@@ -105,7 +110,7 @@ public class RWGui extends Plugin implements Listener
 	/** An item looked for did not exist. */
 	public static final	int		ERR_ITEM_NOT_FOUND		= -3;
 
-	private static final String	version			= "0.4.1";
+	private static final String	version			= "0.5.0";
 
 	//
 	// FIELDS
@@ -126,17 +131,22 @@ public class RWGui extends Plugin implements Listener
 	//********************
 
 	@Override
-	public void onEnable()
+	public void onLoad()
 	{
 		pluginPath	= getPath();
+	}
+
+	@Override
+	public void onEnable()
+	{
 		registerEventListener(this);
-		System.out.println("RWGui "+version+" loaded successfully!");
+		System.out.println("RWGui "+version+" enabled successfully!");
 	}
 	@Override
 	public void onDisable()
 	{
 		unregisterEventListener(this);
-		System.out.println("RWGui "+version+" unloaded successfully!");
+		System.out.println("RWGui "+version+" disabled successfully!");
 	}
 	@EventMethod
 	public void onConnect(PlayerConnectEvent event)

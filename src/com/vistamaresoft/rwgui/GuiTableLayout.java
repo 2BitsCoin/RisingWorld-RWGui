@@ -10,7 +10,7 @@ import net.risingworld.api.utils.Vector2i;
 	A class implementing an automatic table layout in which children GuiElement's
 	are arranged in rows and columns of cells.
 
-	Children are added sequentially from the left cell of the first row tothe
+	Children are added sequentially from the left cell of the first row to the
 	the right cell of the bottom row.
 	<p>Children are added and removed with the usual addChild(GuiElement) and
 	removeChild(GuiElement) methods.
@@ -45,9 +45,9 @@ public class GuiTableLayout extends GuiLayout
 	 * Creates a new table layout with up to maxNumOfCol columns and up to
 	 * maxNumOfRows rows.
 	 * <p>The number of columns and of rows cannot be modified after creation.
-	 * @param maxNumOfCols
-	 * @param maxNumOfRows
-	 * @param flags
+	 * @param maxNumOfCols	the number of table columns
+	 * @param maxNumOfRows	the number of table rows
+	 * @param flags			reserved for future expansions; set to 0
 	 */
 	public GuiTableLayout(int maxNumOfCols, int maxNumOfRows, int flags)
 	{
@@ -63,11 +63,8 @@ public class GuiTableLayout extends GuiLayout
 	}
 
 	/**
-	 * Set the alignment flag of a column, which affects the alignment of
-	 * <b>all</b> the cells of the column.
-	 * <p><b>Important</b>: this method shall be called <b>after</b>all the
-	 * children have been added. New children added after calling this method
-	 * will not be affected by it!
+	 * Set the horizontal alignment flag of a column, which affects the
+	 * horizontal alignment of <b>all</b> the cells of the column.
 	 * @param	idx		the index of the column (0 = leftmost column)
 	 * @param	flag	the alignment flags: one of RWGui.LAYOUT_H_LEFT (which
 	 * 					is the default), RWGui.LAYOUT_H_CENTRE or
@@ -86,11 +83,8 @@ public class GuiTableLayout extends GuiLayout
 	}
 
 	/**
-	 * Set the alignment flag of a row, which affects the alignment of
-	 * <b>all</b> the cells of the column.
-	 * <p><b>Important</b>: this method shall be called <b>after</b>all the
-	 * children have been added. New children added after calling this method
-	 * will not be affected by it!
+	 * Set the vertical alignment flag of a row, which affects the
+	 * vertical alignment of <b>all</b> the cells of the row.
 	 * @param	idx		the index of the row (0 = topmost row)
 	 * @param	flag	the alignment flags: one of RWGui.LAYOUT_V_TOP,
 	 *					RWGui.LAYOUT_V_MIDDLE (which is the default) or

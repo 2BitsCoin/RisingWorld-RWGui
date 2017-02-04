@@ -39,7 +39,7 @@ public class GuiMessageBox extends GuiModalWindow	//GuiPanel implements Listener
 	private	MBThread	mbThread;
 
 	/**
-	 * Creates a new GuiMesageBox.
+	 * Creates a new GuiMessageBox.
 	 * <p>The message box adapts its vertical and horizontal sizes to the number
 	 * and length of the text strings.
 	 * <p>As the underlying Rising World API does not support clipping or
@@ -70,6 +70,10 @@ public class GuiMessageBox extends GuiModalWindow	//GuiPanel implements Listener
 		}
 	}
 
+	/**
+	 * Overloaded constructor; similar to other constructor, but accepts a single
+	 * line of text as contents.
+	 */
 	public GuiMessageBox(Plugin plugin, Player player, String title, String text, int delay)
 	{
 		this(plugin, player, title, new String[]{text}, delay);

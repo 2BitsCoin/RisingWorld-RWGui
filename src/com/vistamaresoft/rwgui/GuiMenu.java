@@ -12,17 +12,11 @@
 
 package com.vistamaresoft.rwgui;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.vistamaresoft.rwgui.RWGui.Pair;
 import com.vistamaresoft.rwgui.RWGui.RWGuiCallback;
 import net.risingworld.api.Plugin;
-import net.risingworld.api.events.EventMethod;
-import net.risingworld.api.events.player.gui.PlayerGuiElementClickEvent;
 import net.risingworld.api.gui.GuiElement;
-import net.risingworld.api.gui.GuiImage;
 import net.risingworld.api.gui.GuiLabel;
-import net.risingworld.api.gui.PivotPosition;
-import net.risingworld.api.objects.Player;
 
 /**
  * A class implementing a modal menu. Each menu is made of a top title bar,
@@ -54,18 +48,6 @@ public class GuiMenu extends GuiModalWindow
 {
 	private static final	int		MAX_NUM_OF_ITEMS= 12;
 
-	// FIELDS
-	//
-	private	GuiLabel[]		guiItems;		// the menu visible items
-	private GuiImage		buttonNext;
-	private GuiImage		buttonPrev;
-	private	int				firstItem;		// the index of the first shown menu item in the list of
-											// all the items;
-	private	boolean			autoClose;
-	private	int				numOfItems;
-	private	int				numOfShownItems;
-	private	List<String>	items;
-
 	/**
 	 * Creates a new GuiMenu.
 	 * @param	plugin		the plug-in the GuiMenu is intended for. This
@@ -82,20 +64,8 @@ public class GuiMenu extends GuiModalWindow
 	public GuiMenu(Plugin plugin, String titleText, RWGuiCallback callback, boolean autoClose)
 	{
 		super(plugin, titleText, RWGui.LAYOUT_VERT, callback);
+		((GuiVerticalLayout)layout).setMaxVisibleRows(MAX_NUM_OF_ITEMS);
 		this.autoClose	= autoClose;
-		guiItems		= new GuiLabel[MAX_NUM_OF_ITEMS];
-		items			= new ArrayList<String>();
-		firstItem		= numOfItems = numOfShownItems = 0;
-		buttonNext	= new GuiImage(0, 0, false, RWGui.BUTTON_SIZE, RWGui.BUTTON_SIZE, false);
-		RWGui.setImage(buttonNext, RWGui.ICN_ARROW_DOWN);
-		buttonNext.setPivot(PivotPosition.TopLeft);
-		buttonNext.setClickable(true);
-		buttonNext.setVisible(false);
-		buttonPrev	= new GuiImage(0, 0, false, RWGui.BUTTON_SIZE, RWGui.BUTTON_SIZE, false);
-		RWGui.setImage(buttonPrev, RWGui.ICN_ARROW_UP);
-		buttonPrev.setPivot(PivotPosition.TopLeft);
-		buttonPrev.setClickable(true);
-		buttonPrev.setVisible(false);
 	}
 
 	/**
@@ -111,42 +81,9 @@ public class GuiMenu extends GuiModalWindow
 	 */
 	public GuiMenu(Plugin plugin, String titleText, RWGuiCallback callback)
 	{
-		this(plugin, titleText, callback, true);
-	}
-
-	@EventMethod
-	public void onClick(PlayerGuiElementClickEvent event)
-	{
-		GuiElement	element	= event.getGuiElement();
-		if (element == buttonPrev)
-		{
-			scrollUp();
-			return;
-		}
-		if (element == buttonNext)
-		{
-			scrollDown();
-			return;
-		}
-
-		Player player	= event.getPlayer();
-		// it is not possible to simply use pop(), as pop() calls free()
-		// and super.onClick() requires the children of this to still be
-		// there. Then, the contents of pop() has been split in everything
-		// but free() before the call to super.onClick() and the call to
-		// free() after it.
-		if (autoClose)
-			close(player);
-		if (prevWindow != null)
-		{
-			prevWindow.show(player);
-			player.setMouseCursorVisible(true);
-		}
-		else
-			player.setMouseCursorVisible(false);
-		super.onClick(event);
-		if (autoClose)
-			free();
+		super(plugin, titleText, RWGui.LAYOUT_VERT, callback);
+		((GuiVerticalLayout)layout).setMaxVisibleRows(MAX_NUM_OF_ITEMS);
+		this.autoClose	= true;
 	}
 
 	//********************
@@ -173,21 +110,14 @@ public class GuiMenu extends GuiModalWindow
 	 */
 	public void addChild(String text, Integer id, Object data)
 	{
-		items.add(text);
-		if (numOfItems < MAX_NUM_OF_ITEMS)
-		{
-			guiItems[numOfItems]	= new GuiLabel(0, 0, false);	// temporary position
-			super.addChild(guiItems[numOfItems], id, data);
-			numOfShownItems++;
-		}
-		numOfItems++;
+		super.addChild(new GuiLabel(text, 0, 0, false), id, data);
 	}
 
 	@Deprecated
 	public int addItem(String text, Integer id, Object data)
 	{
 		addChild(text, id, data);
-		return numOfItems - 1;
+		return ((GuiVerticalLayout)layout).children.size() - 1;
 	}
 
 	/**
@@ -199,28 +129,13 @@ public class GuiMenu extends GuiModalWindow
 	 */
 	public int removeChild(int itemIndex)
 	{
-		if (itemIndex < 0 || itemIndex >= items.size())
-			return RWGui.ERR_INVALID_PARAMETER;
-		items.remove(itemIndex);
-		// TODO: adjust panel width
-		numOfItems--;
-		// if items was right above the max displayable, we no longer need [Prev] and [Next] icons
-		if (numOfItems < MAX_NUM_OF_ITEMS)
-		{
-			removeChild(guiItems[itemIndex]);		// remove GuiLabel from layout
-			// shift items below one slot up
-			for (int i = itemIndex; i < MAX_NUM_OF_ITEMS-1; i++)
-				guiItems[i]	= guiItems[i+1];
-			guiItems[MAX_NUM_OF_ITEMS-1]= null;		// clear last slot
-			numOfShownItems--;
-		}
-		return itemIndex;
+		return ((GuiVerticalLayout)layout).removeChild(itemIndex);
 	}
 
 	@Deprecated
 	public int removeItem(int itemIndex)
 	{
-		return removeChild(itemIndex);
+		return ((GuiVerticalLayout)layout).removeChild(itemIndex);
 	}
 
 	/**
@@ -237,13 +152,15 @@ public class GuiMenu extends GuiModalWindow
 	 */
 	public int removeChild(String itemText)
 	{
-		for (String item : items)
+		for (Pair<GuiElement, Pair<Integer, Object>> item : layout.children)
 		{
-			if (item.equals(itemText))
+			GuiElement	element	= item.getL();
+			if ( ((GuiLabel)element).getText().equals(itemText))
 			{
-				int itemIndex	= items.indexOf(item);
+				int itemIndex	= layout.children.indexOf(item);
 				if (itemIndex != -1)
-					return removeChild(itemIndex);
+					removeChild(element);
+				return itemIndex;
 			}
 		}
 		return RWGui.ERR_ITEM_NOT_FOUND;
@@ -253,102 +170,6 @@ public class GuiMenu extends GuiModalWindow
 	public int removeItem(String itemText)
 	{
 		return removeChild(itemText);
-	}
-
-	@Override
-	public void layout()
-	{
-		super.layout();			// default layout, without UP and DOWN arrows
-		// increment width to include arrow buttons
-		setSize(getWidth() + RWGui.BUTTON_SIZE, getHeight(), false);
-		titleBar.relayout();
-		// determine position of UP and DOWN arrows
-		int		x	= (int)(layout.getPositionX() + layout.getWidth());
-		int		yDn	= (int)layout.getPositionY() + RWGui.BUTTON_SIZE;
-		int		yUp	= yDn + (int)layout.getHeight() - RWGui.BUTTON_SIZE;
-		buttonPrev.setPosition(x,  yUp, false);
-		buttonNext.setPosition(x,  yDn, false);
-	}
-
-	/**
-	 * Displays the menu on the player screen.
-	 * 
-	 * @param	player	the player to show the dialogue box to.
-	 */
-	@Override
-	public void show(Player player)
-	{
-		updateTexts();
-		player.addGuiElement(buttonNext);
-		player.addGuiElement(buttonPrev);
-		super.show(player);
-	}
-
-	/**
-	 * Closes (hides) the menu from the player screen, turning the
-	 * mouse cursor off.
-	 * 
-	 * <p>The menu resources are <b>not freed</b> and the menu can be re-used
-	 * if needed; when the menu is no longer needed, its resources must be
-	 * freed with the free() method, in addition to closing it.
-	 * @param	player	the player from whose screen to remove the menu.
-	 * 					Removing the same menu from the same player multiple
-	 *					times has no effect and does no harm.
-	 */
-	@Override
-	public void close(Player player)
-	{
-		player.removeGuiElement(buttonNext);
-		player.removeGuiElement(buttonPrev);
-		super.close(player);
-	}
-
-	/**
-	 * Releases the resources used by the menu. After this method has
-	 * been called, the menu cannot be used or displayed any longer.
-	 * 
-	 * The resources are in any case garbage collected once the dialogue box
-	 * goes out of scope or all the references to it elapse. Using this method
-	 * might be useful to speed up the garbage collection process, once the
-	 * dialogue box is not longer needed.
-	 */
-	@Override
-	public void free()
-	{
-		buttonNext		= null;
-		buttonPrev		= null;
-		items.clear();
-		super.free();
-	}
-
-	//********************
-	// PRIVATE HELPER METHODS
-	//********************
-
-	private void scrollDown()
-	{
-		firstItem	+= MAX_NUM_OF_ITEMS-1;
-		if (firstItem + MAX_NUM_OF_ITEMS > numOfItems)
-			firstItem	= numOfItems - MAX_NUM_OF_ITEMS;
-		updateTexts();
-	}
-
-	private void scrollUp()
-	{
-		firstItem	-= MAX_NUM_OF_ITEMS-1;
-		if (firstItem < 0)
-			firstItem	= 0;
-		updateTexts();
-	}
-
-	private void updateTexts()
-	{
-		for (int i = 0; i < numOfShownItems; i++)
-		{
-			guiItems[i].setText(items.get(firstItem+i));
-		}
-		buttonPrev.setVisible(firstItem > 0);
-		buttonNext.setVisible(firstItem + MAX_NUM_OF_ITEMS < numOfItems);
 	}
 
 }

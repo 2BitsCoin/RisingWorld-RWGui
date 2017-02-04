@@ -58,7 +58,7 @@ public class GuiModelessWindow extends GuiPanel
 	private GuiTitleBar	titleBar;
 
 	/**
-	 * Creates a modeless window with given title and sequence of textual strings.
+	 * Creates a mode-less window with given title and sequence of textual strings.
 	 * The window is placed near the lower left corner and its height depends
 	 * on the number of textual strings.
 	 * 

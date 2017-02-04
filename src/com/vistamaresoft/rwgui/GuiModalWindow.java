@@ -66,6 +66,7 @@ import net.risingworld.api.objects.Player;
  */
 public class GuiModalWindow extends GuiPanel implements Listener
 {
+	protected	boolean			autoClose;
 	protected	RWGuiCallback	callback;
 	protected	GuiLayout		layout;
 	protected	int				listenerRef;
@@ -93,6 +94,7 @@ public class GuiModalWindow extends GuiPanel implements Listener
 		setBorderColor(RWGui.BORDER_COLOUR);
 		setBorderThickness(RWGui.BORDER_THICKNESS, false);
 		setColor(RWGui.PANEL_COLOUR);
+		this.autoClose	= false;		// only GuiMenu's can have autoClose set to true
 		this.callback	= callback;
 		this.plugin		= plugin;
 		if (layoutType == RWGui.LAYOUT_HORIZ)
@@ -104,7 +106,7 @@ public class GuiModalWindow extends GuiPanel implements Listener
 		layout.setPosition(/*RWGui.DEFAULT_PADDING, RWGui.DEFAULT_PADDING*/0, 0, false);
 		super.addChild(layout);
 		// we can't directly add the title bar, as this.addChild()
-		// is overriden to add to the layout
+		// is overridden to add to the layout
 		titleBar		= new GuiTitleBar(null, title, true);
 		super.addChild(titleBar);
 		listenerRef		= 0;
@@ -121,7 +123,7 @@ public class GuiModalWindow extends GuiPanel implements Listener
 			return;
 		GuiElement	element	= event.getGuiElement();
 		Player		player	= event.getPlayer();
-		// on cancel button press, close the dlg and notify the caller
+		// on cancel button press, close the window and notify the caller
 		if (titleBar.isCancelButton(element))
 		{
 			pop(player);
@@ -131,11 +133,16 @@ public class GuiModalWindow extends GuiPanel implements Listener
 		// on other click events, notify the caller.
 		// GuiTextField's are treated differently, as a click on them is only
 		// reported with an id, without any data.
-		Pair<Integer,Object>	data;
-		if ( (data=layout.getItemData(element)) != null)
+		Pair<Integer,Object>	data	= layout.getItemData(element);
+		if (data != null)
 		{
-			callback.onCall(player, data.getL(), (element instanceof GuiTextField) ? null : data.getR());
-			return;
+			int	id	= data.getL();
+			// if ABORT or OK or any non-internal id with autoClose, pop window
+			if(id == RWGui.ABORT_ID || id == RWGui.OK_ID || id >= RWGui.ABORT_ID && autoClose)
+				pop(player);
+			// if any non-internal id, forward id to callback
+			if(id >= RWGui.ABORT_ID)
+				callback.onCall(player, id, (element instanceof GuiTextField) ? null : data.getR());
 		}
 	}
 
@@ -177,6 +184,7 @@ public class GuiModalWindow extends GuiPanel implements Listener
 	 * @param value	the new padding (in pixels).
 	 */
 	public void setPadding(int value)	{ layout.setPadding(value);	}
+
 	/**
 	 * Lays the window out, arranging all the children of the layout
 	 * hierarchy.
@@ -184,7 +192,6 @@ public class GuiModalWindow extends GuiPanel implements Listener
 	 * This method is always called before showing the window to a player
 	 * and it is usually not necessary to call it manually.
 	 */
-
 	public void layout()
 	{
 		int	tbw		= titleBar.getMinWidth();
@@ -305,12 +312,12 @@ public class GuiModalWindow extends GuiPanel implements Listener
 
 	/**
 	 * Chains another GuiModalWindow in the 'display stack'.
-	 * <p>The new window win is displayed on the player screen 'over' this
+	 * <p>The new window is displayed on the player screen 'over' this
 	 * window, keeping the mouse cursor on.
 	 * <p>As the Rising World API does not have the concept of window or
-	 * of modality and the any uncovered element of this window would remain
+	 * of modality and any uncovered element of this window would remain
 	 * clickable, this window is hidden (but not freed or destroyed); popping
-	 * the new window away (with the pop() method) will show this window back
+	 * the new window away (with its pop() method) will show this window back
 	 * as it was at the push time.
 	 * @param	player	the player on whose screen to display the new window.
 	 * @param	win		the new GuiModalWindow to display.
@@ -331,7 +338,7 @@ public class GuiModalWindow extends GuiPanel implements Listener
 	 * <p>After using this method, the window is no longer functional: none of
 	 * its methods can be used and the window cannot be shown again or used in
 	 * any way.
-	 * @param player
+	 * @param	player	the player from whose screen to pop this window.
 	 */
 	public void pop(Player player)
 	{
@@ -349,9 +356,9 @@ public class GuiModalWindow extends GuiPanel implements Listener
 	/**
 	 * Combines pop() and push(), removing (and destroying) this window and
 	 * pushing win <i>in its place</i>.
-	 * <p>The new window win will become the 'next window'  
-	 * @param player
-	 * @param win
+	 * <p>The new window will become the 'next window'  
+	 * @param	player	the player on whose screen to display the new window.
+	 * @param	win		the new GuiModalWindow to display.
 	 */
 	public void poppush(Player player, GuiModalWindow win)
 	{
