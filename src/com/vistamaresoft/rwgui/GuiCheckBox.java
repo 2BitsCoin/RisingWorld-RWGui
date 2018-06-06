@@ -40,12 +40,12 @@ public class GuiCheckBox extends GuiLayout
 	//
 	// FIELDS
 	//
-	private	GuiImage	checkBox;
-	private	Object		data;
-	private	int			id;
-	private	GuiLabel	label;
-	private boolean		radio;
-	private	int			state;
+	private final	GuiImage	checkBox;
+	private final	Object		data;
+	private final	int			id;
+	private final	GuiLabel	label;
+	private final	boolean		radio;
+	private			int			state;
 
 	/**
 	 * Constructs a check/radio box with text as a label, initialState as
@@ -191,7 +191,7 @@ public class GuiCheckBox extends GuiLayout
 	{
 		Integer		myId = getItemId(element);
 		if (myId != null)
-			return new Pair<Integer, Object>(myId, data);
+			return new Pair<>(myId, data);
 		return null;
 	}
 

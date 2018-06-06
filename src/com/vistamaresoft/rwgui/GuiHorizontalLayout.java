@@ -75,7 +75,7 @@ public class GuiHorizontalLayout extends GuiLayout
 	void layout(int minWidth, int minHeight, boolean reset)
 	{
 		int		height, width;
-		if (children == null || children.size() == 0)
+		if (children == null || children.isEmpty())
 			return;
 		Vector2i[]	elemSizes	= new Vector2i[children.size()];
 		if (reset)

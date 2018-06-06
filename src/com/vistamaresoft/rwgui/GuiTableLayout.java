@@ -38,8 +38,8 @@ import net.risingworld.api.utils.Vector2i;
 */
 public class GuiTableLayout extends GuiLayout
 {
-	private	int		maxNumOfCols, maxNumOfRows;
-	private	int[]	colFlags, rowFlags;
+	private final int maxNumOfCols, maxNumOfRows;
+	private final int[] colFlags, rowFlags;
 
 	/**
 	 * Creates a new table layout with up to maxNumOfCol columns and up to
@@ -104,7 +104,7 @@ public class GuiTableLayout extends GuiLayout
 	public void addChild(GuiElement element, Integer id, Object data)
 	{
 		if (children == null)
-			children	= new ArrayList<Pair<GuiElement,Pair<Integer,Object>>>(maxNumOfCols * maxNumOfRows);
+			children	= new ArrayList<>(maxNumOfCols * maxNumOfRows);
 		if (children.size() < maxNumOfCols * maxNumOfRows)
 		{
 			if (element == null)
@@ -131,7 +131,7 @@ public class GuiTableLayout extends GuiLayout
 	@Override
 	void layout(int minWidth, int minHeight, boolean reset)
 	{
-		if (children == null || children.size() == 0)
+		if (children == null || children.isEmpty())
 			return;
 		Vector2i[]	elemSizes	= new Vector2i[maxNumOfCols * maxNumOfRows];
 		int			col, row;

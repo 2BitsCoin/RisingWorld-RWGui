@@ -131,7 +131,7 @@ public class GuiVerticalLayout extends GuiLayout
 	public Integer getItemId(GuiElement element)
 	{
 		Pair<Integer,Object>	myData	= getItemData(element);
-		return myData.getL();
+		return (myData != null ? myData.getL() : null);
 	}
 
 	/**
@@ -148,12 +148,12 @@ public class GuiVerticalLayout extends GuiLayout
 		if (element == buttonPrev)
 		{
 			scrollUp();
-			return new Pair<Integer, Object>(RWGui.PGUP_ID, null);
+			return new Pair<>(RWGui.PGUP_ID, null);
 		}
 		if (element == buttonNext)
 		{
 			scrollDown();
-			return new Pair<Integer, Object>(RWGui.PGDN_ID, null);
+			return new Pair<>(RWGui.PGDN_ID, null);
 		}
 		return super.getItemData(element);
 	}
@@ -199,7 +199,7 @@ public class GuiVerticalLayout extends GuiLayout
 	 * 
 	 * If the element is not a direct child of the layout, the method does
 	 * nothing.
-	 * @param	element	The GuiElement to remove
+	 * @param	itemIndex	The 0-based index of the child GuiElement to remove
 	 */
 	public int removeChild(int itemIndex)
 	{
@@ -277,7 +277,7 @@ public class GuiVerticalLayout extends GuiLayout
 	void layout(int minWidth, int minHeight, boolean reset)
 	{
 		int		height, width;
-		if (children == null || children.size() == 0)
+		if (children == null || children.isEmpty())
 			return;
 		if (reset)
 		{

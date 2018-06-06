@@ -73,13 +73,27 @@ public class GuiMessageBox extends GuiModalWindow	//GuiPanel implements Listener
 	/**
 	 * Overloaded constructor; similar to other constructor, but accepts a single
 	 * line of text as contents.
+	 * @param	plugin	the plug-in the GuiMessageBox is intended for. This
+	 * 					is only needed to manage the internal event listener
+	 * 					and has no effects on the plug-in itself.
+	 * @param	player	the player to show the message box to.
+	 * @param	title	the text of the title.
+	 * @param	text	a String with the text to display.
+	 * @param	delay	a timed duration of the message box in seconds; once
+	 * 					this time elapses, the message box closes down
+	 * 					automatically. Use 0 for a non-closing box.
 	 */
 	public GuiMessageBox(Plugin plugin, Player player, String title, String text, int delay)
 	{
 		this(plugin, player, title, new String[]{text}, delay);
 	}
 
+	/**
+	 *
+	 * @param event
+	 */
 	@EventMethod
+	@Override
 	public void onClick(PlayerGuiElementClickEvent event)
 	{
 		if (titleBar.isCancelButton(event.getGuiElement()))
@@ -87,15 +101,14 @@ public class GuiMessageBox extends GuiModalWindow	//GuiPanel implements Listener
 			if (mbThread != null)
 				mbThread.interrupt();
 			pop(event.getPlayer());
-			return;
 		}
 	}
 
 	private static class MBThread extends Thread
 	{
-		private int				delaySecs;
-		private	GuiMessageBox	messageBox;
-		private	Player			player;
+		private final	int				delaySecs;
+		private final	GuiMessageBox	messageBox;
+		private final	Player			player;
 
 		public MBThread(GuiMessageBox messageBox, Player player, int delaySecs)
 		{

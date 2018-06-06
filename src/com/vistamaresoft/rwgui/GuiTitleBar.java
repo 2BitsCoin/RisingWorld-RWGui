@@ -38,9 +38,9 @@ public final class GuiTitleBar extends GuiPanel
 	private static final	int		TITLE_XPOS		= RWGui.DEFAULT_PADDING;
 	private static final	int		TITLE_YPOS		= TITLEBAR_HEIGHT - RWGui.DEFAULT_PADDING;
 
-	private	GuiImage	cancelButton;
-	private	int			minWidth;
-	private GuiLabel	title;
+	private			GuiImage	cancelButton;
+	private final	int			minWidth;
+	private			GuiLabel	title;
 
 	/**
 	 * Creates a new title bar as a child of an existing GuiElement (typically

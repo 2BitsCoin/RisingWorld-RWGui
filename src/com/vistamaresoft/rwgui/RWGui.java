@@ -12,7 +12,6 @@
 
 package com.vistamaresoft.rwgui;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -53,40 +52,40 @@ public class RWGui extends Plugin implements Listener
 	public static final	int		DEFAULT_PADDING	= 6;
 	public static final	float	AVG_CHAR_WIDTH1	= 0.5f;		// the average char width at size 1
 	// Standard Colours: backgrounds
-	public static final	int		PANEL_COLOUR	= 0x202020FF;
+	public static final	int		PANEL_COLOUR		= 0x202020FF;
 	public static final	int		TITLEBAR_COLOUR	= 0x505050FF;
 	public static final	int		BORDER_COLOUR	= 0x909090FF;
 	public static final	int		ACTIVE_COLOUR	= 0x0060D0FF;
 	public static final	int		INACTIVE_COLOUR	= 0x404040FF;
 	// Standard colours: texts
 	public static final	int		TEXT_COLOUR		= 0xFFFFFFFF;
-	public static final	int		TITLE_COLOUR	= 0xFFFFFFFF;
+	public static final	int		TITLE_COLOUR		= 0xFFFFFFFF;
 	public static final	int		TEXT_SEL_COLOUR	= 0x00B0FFFF;
 	public static final	int		TEXT_DIM_COLOUR	= 0x808080FF;
 	// Stock Images
 	public static final int		ICN_ARROW_DOWN	= 0;
 	public static final int		ICN_ARROW_LEFT	= 1;
 	public static final int		ICN_ARROW_RIGHT	= 2;
-	public static final int		ICN_ARROW_UP	= 3;
+	public static final int		ICN_ARROW_UP		= 3;
 	public static final int		ICN_CHECK		= 4;
 	public static final int		ICN_CROSS		= 5;
 	public static final int		ICN_UNCHECK		= 6;
-	public static final int		ICN_PLUS		= 7;
+	public static final int		ICN_PLUS			= 7;
 	public static final int		ICN_MINUS		= 8;
 	public static final	int		ICN_RADIO_CHECK	= 9;
-	public static final	int		ICN_RADIO_UNCHECK	= 10;
-	public static final int		ICN_MIN				= 0;
-	public static final int		ICN_MAX				= ICN_RADIO_UNCHECK;
+	public static final	int		ICN_RADIO_UNCHECK= 10;
+	public static final int		ICN_MIN			= 0;
+	public static final int		ICN_MAX			= ICN_RADIO_UNCHECK;
 	// LAYOUT TYPE
 	public static final int		LAYOUT_HORIZ	= 1;
 	public static final int		LAYOUT_VERT		= 2;
-	public static final int		LAYOUT_TABLE	= 3;
+	public static final int		LAYOUT_TABLE		= 3;
 	// LAYOUT Arrangements
 	public static final int		LAYOUT_H_LEFT	= 0x00;
 	public static final int		LAYOUT_H_CENTRE	= 0x01;
 	public static final int		LAYOUT_H_RIGHT	= 0x02;
 	public static final int		LAYOUT_H_SPREAD	= 0x04;
-	public static final int		LAYOUT_V_TOP	= 0x00;
+	public static final int		LAYOUT_V_TOP		= 0x00;
 	public static final int		LAYOUT_V_MIDDLE	= 0x08;
 	public static final int		LAYOUT_V_BOTTOM	= 0x10;
 	public static final int		LAYOUT_V_SPREAD	= 0x20;
@@ -95,10 +94,10 @@ public class RWGui extends Plugin implements Listener
 	/** The id reported by a click event on the default button of dialogue box. */
 	public static final	int		OK_ID			= 0;
 	/** The id reported by a click event on a close button. */
-	public static final	int		ABORT_ID		= -1;
+	public static final	int		ABORT_ID			= -1;
 	// Id's used internally
-	protected static final	int	PGUP_ID		= -2;
-	protected static final	int	PGDN_ID		= -3;
+	protected static final	int	PGUP_ID			= -2;
+	protected static final	int	PGDN_ID			= -3;
 
 	// STANDARD RETURN CODES
 	/** The operation has been successful. */
@@ -106,17 +105,17 @@ public class RWGui extends Plugin implements Listener
 	/** A parameter was out of range or invalid. */
 	public static final	int		ERR_INVALID_PARAMETER	= -1;
 	/** A resource (icon) looked for did not exist. */
-	public static final	int		ERR_MISSING_RESOURCE	= -2;
+	public static final	int		ERR_MISSING_RESOURCE		= -2;
 	/** An item looked for did not exist. */
 	public static final	int		ERR_ITEM_NOT_FOUND		= -3;
 
-	private static final String	version			= "0.5.0";
+	private static final String	version			= "0.5.1";
 
 	//
 	// FIELDS
 	//
-	private		static	ImageInformation[]	stockIcons		= new ImageInformation[ICN_MAX-ICN_MIN+1];
-	private		static	String[]			stockIconPaths =
+	private static final	ImageInformation[]	stockIcons		= new ImageInformation[ICN_MAX-ICN_MIN+1];
+	private static final	String[]			stockIconPaths =
 			{	"/assets/arrowDown.png", "/assets/arrowLeft.png",
 				"/assets/arrowRight.png", "/assets/arrowUp.png",
 				"/assets/check.png", "/assets/cross.png", "/assets/uncheck.png",
@@ -172,14 +171,7 @@ public class RWGui extends Plugin implements Listener
 			return ERR_INVALID_PARAMETER;
 		if (stockIcons[iconId] == null)
 		{
-			try
-			{
-				stockIcons[iconId]	= new ImageInformation(pluginPath + stockIconPaths[iconId]);
-			} catch (IOException e)
-			{
-				e.printStackTrace();
-				return ERR_MISSING_RESOURCE;
-			}
+			stockIcons[iconId]	= new ImageInformation(pluginPath + stockIconPaths[iconId]);
 		}
 		image.setImage(stockIcons[iconId]);
 		return ERR_SUCCESS;
@@ -288,7 +280,7 @@ public class RWGui extends Plugin implements Listener
 	{
 		if (users != null)
 			return users;
-		users	= new ArrayList<Pair<Integer,String>>();
+		users	= new ArrayList<>();
 		WorldDatabase	db = plugin.getWorldDatabase();
 		try(ResultSet result = db.executeQuery("SELECT `ID`,`Name` FROM `Player` ORDER BY `Name`ASC"))
 		{
@@ -296,7 +288,7 @@ public class RWGui extends Plugin implements Listener
 			{
 				int		id		= result.getInt(1);
 				String	name	= result.getString(2);
-				Pair<Integer,String>	item	= new Pair<Integer,String>(id, name);
+				Pair<Integer,String>	item	= new Pair<>(id, name);
 				users.add(item);
 			}
 			result.close();

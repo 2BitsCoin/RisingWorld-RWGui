@@ -38,8 +38,8 @@ public class GuiInputDlgBox extends GuiDialogueBox
 {
 	private static final	int		TEXTENTRY_WIDTH	= 300;
 
-	private		RWGuiCallback	dlgCallback;
-	private		int				dlgId;
+	private final		RWGuiCallback	dlgCallback;
+	private final		int				dlgId;
 
 	/**
 	 * Constructs a new GuiInputDlgBox.

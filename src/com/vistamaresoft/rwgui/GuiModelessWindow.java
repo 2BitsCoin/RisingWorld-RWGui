@@ -53,9 +53,9 @@ public class GuiModelessWindow extends GuiPanel
 
 	// FIELDS
 	//
-	private	Player		player;
-	private	GuiLabel[]	labels;
-	private GuiTitleBar	titleBar;
+	private final	Player		player;
+	private			GuiLabel[]	labels;
+	private			GuiTitleBar	titleBar;
 
 	/**
 	 * Creates a mode-less window with given title and sequence of textual strings.

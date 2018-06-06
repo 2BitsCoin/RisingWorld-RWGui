@@ -216,8 +216,8 @@ public class GuiLayout extends GuiPanel
 		if (element == null)
 			return;
 		if (children == null)
-			children	= new ArrayList<Pair<GuiElement,Pair<Integer,Object>>>(4);
-		children.add(new Pair<GuiElement,Pair<Integer,Object>>(element, new Pair<Integer,Object>(id, data)));
+			children	= new ArrayList<>(4);
+		children.add(new Pair<>(element, new Pair<>(id, data)));
 		if (element instanceof GuiImage)
 			((GuiImage)element).setClickable(id != null);
 		else if (element instanceof GuiLabel)
@@ -364,6 +364,23 @@ public class GuiLayout extends GuiPanel
 			}
 			if (item.getL() == element)
 				return item.getR();
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the child with the given id or null if none.
+	 * @param id	the id to look for.
+	 * @return	the child GuiElement with the given id or null if none is found.
+	 */
+	public GuiElement getChildFromId(int id)
+	{
+		for (Pair<GuiElement,Pair<Integer, Object>> item : children)
+		{
+			if (item == null)
+				continue;
+			if (item.getR().getL() == id)
+				return item.getL();
 		}
 		return null;
 	}
